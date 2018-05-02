@@ -36,6 +36,12 @@ public class Generators {
         generator.setGenerator(getIntGenerator(pattern));
         return generator;
     }
+    
+    public static ScopeGenerator getScopGenerator(String pattern) {
+    	DefaultScopeGenerator generator = new DefaultScopeGenerator();
+    	generator.setGenerator(getStringGenerator(pattern));
+    	return generator;
+    }
 
     private static IntGenerator getIntGenerator(String pattern) {
         IntGenerator generator = null;
@@ -48,6 +54,14 @@ public class Generators {
         if ((generator = SequentialIntGenerator.parse(pattern)) != null)
             return generator;
         if ((generator = HistogramIntGenerator.parse(pattern)) != null)
+            return generator;
+        String msg = "unrecognized distribution: " + pattern;
+        throw new ConfigException(msg);
+    }
+    
+    private static StringGenerator getStringGenerator(String pattern) {
+        StringGenerator generator = null;
+        if ((generator = ScopeStringGenerator.parse(pattern)) != null)
             return generator;
         String msg = "unrecognized distribution: " + pattern;
         throw new ConfigException(msg);

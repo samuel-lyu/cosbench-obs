@@ -132,7 +132,14 @@ public class NoneStorage implements StorageAPI {
             logger.info("performing DELETE at /{}/{}", container, object);
     }
 
-    protected void createMetadata(String container, String object,
+    @Override
+	public InputStream downloadByRange(String container, String object, Config config, String scope) {
+    	if (logging)
+            logger.info("performing GET by range at /{}/{}", container, object);
+    	return new ByteArrayInputStream(new byte[] {});
+	}
+
+	protected void createMetadata(String container, String object,
             Map<String, String> map, Config config) {
         if (logging)
             logger.info("performing POST at /{}/{}", container, object);

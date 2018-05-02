@@ -21,6 +21,6 @@ import java.util.Random;
 
 public interface SizeGenerator {
 
-    public long next(Random random); // in bytes
+    public long next(Random random); 
 
 }

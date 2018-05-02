@@ -167,5 +167,15 @@ public interface StorageAPI {
      * 
      */
     public Boolean isAuthValid();
-
+    /**
+     * DownloadByRange
+     * 
+     * @param container
+     *            - the name of a container.
+     * @param object
+     *            - the name of an object to be deleted.
+     * @param config
+     *            - the configuration used for this operation.
+     */
+    public InputStream downloadByRange(String container, String object, Config config,String scope);
 }
