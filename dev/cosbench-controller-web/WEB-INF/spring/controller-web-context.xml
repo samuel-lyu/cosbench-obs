@@ -20,6 +20,11 @@
 		class="com.intel.cosbench.controller.web.IndexPageController">
 		<property name="controller" ref="controller" />
 	</bean>
+	
+	<bean id="HistoryWorkloadPageController" name="/historyWorkload.html"
+		class="com.intel.cosbench.controller.web.HistoryWorkloadPageController">
+		<property name="controller" ref="controller" />
+	</bean>
 
 	<bean id="matrixPageController" name="/matrix.html"
 		class="com.intel.cosbench.controller.web.MatrixPageController">
@@ -75,6 +80,16 @@
 		class="com.intel.cosbench.controller.web.DownloadConfigController">
 		<property name="controller" ref="controller" />
 	</bean>
+	
+	<bean id="DownloadUserTempletController" name="/download-userTemplet.do"
+		class="com.intel.cosbench.controller.web.DownloadUserTempletController">
+		<property name="controller" ref="controller" />
+	</bean>
+	
+	<bean id="ImportUser" name="/import-user.do"
+		class="com.intel.cosbench.controller.web.ImportUser">
+		<property name="controller" ref="controller" />
+	</bean>
 
 	<bean id="stagePageController" name="/stage.html"
 		class="com.intel.cosbench.controller.web.StagePageController">
@@ -85,12 +100,17 @@
 		class="com.intel.cosbench.controller.web.TimelinePageController">
 		<property name="controller" ref="controller" />
 	</bean>
-
+	
+	<bean id="UserManagementController" name="/userManagement.html"
+		class="com.intel.cosbench.controller.web.UserManagementController">
+		<property name="controller" ref="controller" />
+	</bean>
+	
 	<bean id="timelineCsvController" name="/timeline.csv"
 		class="com.intel.cosbench.controller.web.TimelineCSVController">
 		<property name="controller" ref="controller" />
 	</bean>
-
+	
 	<bean id="urlHandler"
 		class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
 	</bean>

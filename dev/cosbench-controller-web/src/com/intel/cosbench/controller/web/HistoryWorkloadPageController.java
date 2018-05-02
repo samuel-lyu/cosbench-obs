@@ -33,7 +33,7 @@ import com.intel.cosbench.web.AbstractController;
  * @author ywang19, qzheng7
  *
  */
-public class IndexPageController extends AbstractController {
+public class HistoryWorkloadPageController extends AbstractController {
 
     private ControllerService controller;
 
@@ -44,29 +44,25 @@ public class IndexPageController extends AbstractController {
 	@Override
 	protected ModelAndView process(HttpServletRequest req,
 			HttpServletResponse res) throws IOException {
-		ModelAndView result = new ModelAndView("index");
-		String id = req.getParameter("id");
-		String up = req.getParameter("up");
-		String neighId = req.getParameter("neighid");
-		String cancelIds = req.getParameter("cancelIds");
-		String cancel = req.getParameter("cancel");
-		if (!StringUtils.isEmpty(id) && !StringUtils.isEmpty(up)) {
-			boolean isUp = up.equalsIgnoreCase("yes") ? true : false;
-			boolean changeOrderOk = controller.changeOrder(id, neighId,
-					isUp);
-			if (changeOrderOk) {
-				result.addObject("highlightId", id);
+		ModelAndView result = new ModelAndView("historyWorkload");
+		String resubmitIds = req.getParameter("resubmitIds");
+		String resubmit = req.getParameter("resubmit");
+		String loadArch = req.getParameter("loadArch");
+		if (!StringUtils.isEmpty(resubmit)&&!StringUtils.isEmpty(resubmitIds)){
+			String[] ids = resubmitIds.split("_");
+			for (String resubmitId : ids){
+				String newId = controller.resubmit(resubmitId);
+				controller.fire(newId);
 			}
-		} else if (!StringUtils.isEmpty(cancelIds)
-				&& !StringUtils.isEmpty(cancel)) {
-			String[] ids = cancelIds.split("_");
-			for (String cancelId : ids) {
-				controller.cancel(cancelId);
-			}
-		} 
+		}
+		if (!StringUtils.isEmpty(loadArch) && loadArch.equals("true"))
+			controller.setloadArch(true);
+		else if (!StringUtils.isEmpty(loadArch) && loadArch.equals("false"))
+			controller.setloadArch(false);
 		
-        result.addObject("cInfo", controller.getControllerInfo());
-        result.addObject("aInfos", controller.getActiveWorkloads());
+        result.addObject("hInfos", controller.getHistoryWorkloads());
+        result.addObject("archInfos", controller.getArchivedWorkloads());
+        result.addObject("loadArch", controller.getloadArch());
 		return result;
 	}
 }

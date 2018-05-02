@@ -4,9 +4,37 @@
 html {
 	color: #555;
 	font-size: 16px;
-	font-weight: normal;
 	font-family: verdana, tahoma, sans-serif;
 	font-weight: normal;
+}
+
+input[type="number"] {
+	width:60px!important;
+}
+
+input[type="submit"] {
+	font-size:inherit;
+	background-color:buttonface;
+	border-width: 2px;
+    border-style: outset;
+    border-color: buttonface;
+    border-image: initial;
+	color:inherit;
+	padding:1px 6px;
+	margin:10px 0px;
+}
+
+.checkbox input[type="checkbox"] {
+    position:relative;
+	margin-left:0px;
+}
+
+p a,td a {
+	text-decoration:underline!important
+}
+
+.content p:first-child {
+	margin-top:20px
 }
 
 h2 {
@@ -27,14 +55,24 @@ a {
 	color: #086DB6;
 }
 
+a.label:hover {
+	color: #555;
+}
+
 a:visited {
 	color: #555;
 }
 
+#rightContent {
+	position: relative;
+	left: 230px;
+	width:87%;
+	box-sizing: border-box
+}
+
 .content {
-	width: 1100px;
-	margin-left: auto;
-	margin-right: auto;
+	width: 90%;
+	margin: auto;
 }
 
 /* ---------------------------------------
@@ -46,8 +84,7 @@ a:visited {
 	height: 65px;
 	position: fixed;
 	top: 0px;
-	left: 0px;
-	width: 100%;
+	width: 87%;
 }
 
 #title {
@@ -79,8 +116,7 @@ a:visited {
 	height: 35px;
 	position: fixed;
 	bottom: 0px;
-	left: 0px;
-	width: 100%;
+	width: 87%;
 }
 
 #footer .content {
@@ -96,26 +132,26 @@ a:visited {
 }
 
 .a1 {
-	width: 1000px;
+	width: 100%;
 	padding: 5px;
 	margin: 15px 0px;
 }
 
 .a2 {
-	width: 900px;
+	width: 90%;
 	padding: 5px;
 	margin: 15px 0px;
 }
 
 .a3 {
-	width: 800px;
+	width: 90%;
 	padding: 5px;
 	margin: 15px 0px;
 	margin-left: 50px;
 }
 
 .top {
-	height: 47px;
+	height: 55px;
 }
 
 .bottom {
@@ -150,7 +186,8 @@ a:visited {
 
 .info-table th {
 	padding: 2px;
-	color: #FFFFFF;
+	color: #FFFFFF!important;
+	text-align: center;
 	background-color: #555555;
 }
 
@@ -196,16 +233,17 @@ a:visited {
 
 .Stages-table th {
 	padding: 2px;
-	color: #FFFFFF;
+	text-align:center;
+	color: #FFFFFF!important;
 	background-color: #555555;
 }
 
 .Stages-table th:hover {
-	background-color: #333333;
+	background-color: #333333!important;
 }
 
 .Stages-table th.id {
-	color: #555555;
+	color: #555555!important;
 	background: #BBBBAA;
 }
 
@@ -311,10 +349,21 @@ a:visited {
 
 .label {
 	margin-right: 10px;
+	font-size:100%;
+	font-weight:normal;
+	color:#555;
+	padding:0px
+}
+
+.label strong {
+	font-size:16px!important;
+	font-weight:bold!important;
+	color:#555
 }
 
 .checkbox {
-	margin-right: 5px;
+	margin:0px 5px 0px 0px;
+	display:inline-block;
 }
 
 .grid {
