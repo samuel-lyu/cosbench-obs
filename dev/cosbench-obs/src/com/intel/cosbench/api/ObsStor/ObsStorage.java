@@ -154,19 +154,20 @@ public class ObsStorage extends NoneStorage{
 	}
 
 	@Override
-	public InputStream downloadByRange(String container, String object, Config config, String scope) {
+	public InputStream getObjectByRange(String container, String object, Config config, long startRange, long endRange) {
 		// TODO Auto-generated method stub
-		//return super.downloadByRange(container, object, config);
-		System.out.println("ªÒ»°∑∂Œß"+scope);       
-//		GetObjectRequest rangeObjectRequest = new GetObjectRequest(
-//				"bucketName", "key");
-//		rangeObjectRequest.setRange(1,2); // retrieve 1st 11 bytes.
-//		S3Object objectPortion = client.getObject(rangeObjectRequest);
-//
-//		InputStream objectData = objectPortion.getObjectContent();
-//		// Process the objectData stream.
-//		return objectData;
-		return null;
+		
+		System.out.println(startRange+"-"+endRange);
+		
+		super.getObjectByRange(container, object, config, startRange, endRange);     
+
+		GetObjectRequest rangeObjectRequest = new GetObjectRequest(container, object);
+		rangeObjectRequest.setRange(startRange,endRange); // retrieve 1st 11 bytes.
+		S3Object objectPortion = client.getObject(rangeObjectRequest);
+
+		InputStream objectData = objectPortion.getObjectContent();
+		// Process the objectData stream.
+		return objectData;
 	}
 	
 }

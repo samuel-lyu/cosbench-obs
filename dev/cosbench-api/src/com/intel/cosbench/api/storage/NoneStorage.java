@@ -133,7 +133,7 @@ public class NoneStorage implements StorageAPI {
     }
 
     @Override
-	public InputStream downloadByRange(String container, String object, Config config, String scope) {
+	public InputStream getObjectByRange(String container, String object, Config config, long startRange, long endRange) {
     	if (logging)
             logger.info("performing GET by range at /{}/{}", container, object);
     	return new ByteArrayInputStream(new byte[] {});

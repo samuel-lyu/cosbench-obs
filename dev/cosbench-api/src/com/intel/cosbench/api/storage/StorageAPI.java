@@ -177,5 +177,5 @@ public interface StorageAPI {
      * @param config
      *            - the configuration used for this operation.
      */
-    public InputStream downloadByRange(String container, String object, Config config,String scope);
+    public InputStream getObjectByRange(String container, String object, Config config, long startRange, long endRange);
 }
