@@ -48,10 +48,10 @@ public class UserManagementController extends AbstractController {
     @Override
     protected ModelAndView process(HttpServletRequest req,
             HttpServletResponse res) throws Exception {
-    	return process();
+    	return process(req);
     }
     
-    protected ModelAndView process() {
+    protected ModelAndView process(HttpServletRequest req) {
     	ModelAndView result = new ModelAndView("userManagement");
     	List<User> allUsers = new ArrayList<User>();
 		readUserFromExcel(allUsers);
@@ -93,7 +93,9 @@ public class UserManagementController extends AbstractController {
 						break;
 					}
                 }
-                allUsers.add(user);
+                if (!user.getId().equals("")) {
+					allUsers.add(user);
+				}
             }  
         } catch (FileNotFoundException e) {  
             e.printStackTrace();  

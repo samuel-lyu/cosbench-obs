@@ -8,6 +8,7 @@
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
 	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
+	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	
   <script type="text/javascript">
 	function checkAll(event, str) {
@@ -97,8 +98,8 @@
 				</table>
 			  </div>
 			  
-			  <p>
-			  	<a class="label" href="download-userTemplet.do" style="text-align:left;display:block;margin:10px 0px;">download-templet</a>
+			  <p style="margin-bottom:0px">
+			  	<a class="label" href="download-userTemplet.do" style="text-align:left;display:inline-block;margin:10px 0px;">download-templet</a>
 			  </p>
 			  <div>
 			<form name="import-user" action="import-user.do" method="POST" enctype="multipart/form-data">
@@ -106,7 +107,7 @@
 				<p><span class="error"><strong>Note</strong>: ${error}!</span></p>
 			  </#if>
 			  <label for="user" style="color:#555">import-user:</label>
-			  <input name="user" type="file" id="user" style="width:500px;display:inline-block" />
+			  <input name="user" type="file" id="user" style="width:500px;display:block" />
 			  <input type="submit" value="submit" /> 
 			</form>
 		  </div>
@@ -116,8 +117,6 @@
 		<#include "footer.ftl">
 	</div>
 
-	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
-	<script src="resources/js/nav.js"></script>
 </body>
 </html>

@@ -8,6 +8,8 @@
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
 	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
+	<script src="resources/js/jquery-1.10.2.min.js"></script>
+	
   <title>Performance Matrix</title>
 </head>
 <body>
@@ -18,10 +20,6 @@
 		<div id="main">
 		<div class="top"><br /></div>
 		<div class="content">
-		  <p>
-			<a href="index.html">index</a> ->
-			<span>matrix</span>
-		  </p>
 		  <h2>Performance Matrix</h2>
 		  <h3>Filters</h3>
 		  <div class="form">
@@ -304,15 +302,12 @@
 			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=t&others=cfg">show T only</a>
 			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=bw&others=cfg">show BW only</a>
 		  </p>
-		  <p><a href="index.html">go back to index</a></p>
 		</div> <#-- end of content -->
 		<div class="bottom"><br /></div>
 		</div> <#-- end of main -->
 		<#include "footer.ftl">
 	</div>
 
-	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
-	<script src="resources/js/nav.js"></script>
 </body>
 </html>

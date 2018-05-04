@@ -63,10 +63,20 @@ a:visited {
 	color: #555;
 }
 
+.sidebar-menu {
+    position: fixed;
+    float: left;
+    width: 170px;
+    top: 60px;
+    left: 0;
+    bottom: 30px;
+	background-color: rgb(0,90,161);
+}
+
 #rightContent {
 	position: relative;
-	left: 230px;
-	width:87%;
+	left: 170px;
+	width:90%;
 	box-sizing: border-box
 }
 
@@ -84,7 +94,9 @@ a:visited {
 	height: 65px;
 	position: fixed;
 	top: 0px;
-	width: 87%;
+	left:0px;
+	right:0px;
+	width: 100%;
 }
 
 #title {
@@ -93,6 +105,7 @@ a:visited {
 	font-variant: small-caps;
 	position: relative;
 	top: 12px;
+	left: 120px
 }
 
 #title .codename {
@@ -115,8 +128,10 @@ a:visited {
 	background: url('bg-footer.png') repeat-x left bottom;
 	height: 35px;
 	position: fixed;
+	left:0px;
+	right:0px;
 	bottom: 0px;
-	width: 87%;
+	width: 100%;
 }
 
 #footer .content {
@@ -151,7 +166,7 @@ a:visited {
 }
 
 .top {
-	height: 55px;
+	height: 65px;
 }
 
 .bottom {

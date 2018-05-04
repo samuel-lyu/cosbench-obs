@@ -8,6 +8,7 @@
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
 	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
+	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	
   <script type="text/javascript">
 	function checkAll(event, str) {
@@ -82,35 +83,6 @@
 			<div class="content">
 			  
 			  <div>
-			   <h3>Historical Workloads  <span class="counter state">${hInfos?size}</span></h3>
-				<p><a href="matrix.html?type=histo&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&metrics=t&metrics=succ">view performance matrix</a></p>
-				<table class="info-table">
-				  <tr>
-					<th style="width:5%;"><input type="checkbox" id="AllHistory" onclick="checkAll(event,'HistoryWorkload')"></th>
-					<th class="id" style="width:5%;">ID</th>
-					<th>Name</th>
-					<th>Duration</th>
-					<th>Op-Info</th>
-					<th>State</th>
-					<th style="width:15%;">Link</th>
-				  </tr>
-				  <#list hInfos as hInfo >
-					<tr>
-					  <td><input type="checkbox" id="checkbox-${hInfo.id}" name="HistoryWorkload" onclick="checkItem(event,'AllHistory')" value="${hInfo.id}"></td>
-					  <td onclick="checkMe('${hInfo.id}','AllHistory');");">${hInfo.id}</td>
-					  <td onclick="checkMe('${hInfo.id}','AllHistory');");">${hInfo.workload.name}</td>
-					  <td onclick="checkMe('${hInfo.id}','AllHistory');");"><#if hInfo.startDate?? >${hInfo.startDate?datetime}<#else>N/A</#if> - ${hInfo.stopDate?time}</td>
-					  <td onclick="checkMe('${hInfo.id}','AllHistory');");">
-						<#list hInfo.allOperations as op >
-						  ${op}<#if op_has_next>,</#if>
-						</#list>
-					  </td>
-					  <td onclick="checkMe('${hInfo.id}','AllHistory');"><span class="workload-state-${hInfo.state?lower_case} state">${hInfo.state?lower_case}</span></td>
-					  <td><a href="workload.html?id=${hInfo.id}">view details</a></td>
-					</tr>
-				  </#list>
-				</table>
-				
 				<h3>Archived Workloads  <span class="counter state">${archInfos?size}</span></h3>
 				<p><a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&metrics=t&metrics=succ">view performance matrix</a></p>
 				<p>
@@ -163,8 +135,6 @@
 		<#include "footer.ftl">
 	</div>
 
-	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
-	<script src="resources/js/nav.js"></script>
 </body>
 </html>

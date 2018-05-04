@@ -7,6 +7,7 @@
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
 	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
+  	<script src="resources/js/jquery-1.10.2.min.js"></script>
   <title>Workload Configuration</title>
 </head>
 <body>
@@ -83,7 +84,8 @@
 									
 										<th ><strong></strong> </th>
 										<th ><strong>Type</strong></a> </th>
-										<th ></strong>Configuration</strong></a> </th>
+										<th ><strong>User</strong></a> </th>
+										<th ></strong>URL</strong></a> </th>
 									</tr>
 								</thead>
 								<tbody>
@@ -98,7 +100,21 @@
 											</select>
 										</td>
 										<td >
-											<input name="auth.config" type="text" style="width:500px" value="username=test:tester;password=testing;url=http://192.168.10.1:8080/auth/v1.0" 
+											<select name="auth.user">
+												<#list userGroupList as userGroup>
+													<#if userGroup_index = 0>
+														<option value=${userGroup} selected="true">userGroup:${userGroup}</option>
+													<#else>
+														<option value=${userGroup}>userGroup:${userGroup}</option>
+													</#if>
+												</#list>
+												<#list userList as user>
+													<option value=${user}>user:${user}</option>
+												</#list>
+											</select>
+										</td>
+										<td >
+											<input name="auth.url" type="text" style="width:500px" value="url=http://192.168.10.1:8080/auth/v1.0" 
 							title="different auth system has different parameters: &#10;[swauth]: username=<account:username>;password=<password>;url=<url> &#10;[keystone]: username=<account:username>;password=<password>;url=<url> &#10;[mock]: delay=<time> &#10;[none]: " /> 
 										</td>
 									</tr>
@@ -106,7 +122,7 @@
 									<tr>
 										<td >Storage</td>
 										<td >
-											<select name="storage.type">
+											<select name="storage.type" id="storage.type" onChange="changeStorage()">
 											  <option value="swift" selected="true">swift</option>
 											  <option value="ampli">amplistor</option>
 											  <option value="mock">mock</option>
@@ -114,7 +130,21 @@
 											</select>
 										</td>
 										<td >
-											<input name="storage.config" type="text" style="width:500px" value=""
+											<select name="storage.user">
+												<#list userGroupList as userGroup>
+													<#if userGroup_index = 0>
+														<option value=${userGroup} selected="true">userGroup:${userGroup}</option>
+													<#else>
+														<option value=${userGroup}>userGroup:${userGroup}</option>
+													</#if>
+												</#list>
+												<#list userList as user>
+													<option value=${user}>user:${user}</option>
+												</#list>
+											</select>
+										</td>
+										<td >
+											<input name="storage.url" id="storage.config" type="text" style="width:500px" value=""
 							title="different storage system has different parameters: &#10 [swift]:  &#10 [ampli]: host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id> &#10; [mock]: delay=<time>;&#10 [none]: " /> 
 										</td>
 									</tr>
@@ -567,7 +597,6 @@
 			  
 			</form>
 		  
-				<p><a href="index.html" style="margin-left:5%">go back to index</a></p>
 			</div> <#-- end of content -->
 			<div class="bottom"><br /></div>
 		</div> <#-- end of main -->
@@ -719,8 +748,6 @@
 		}		
 	}
  </script>
-	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
-	<script src="resources/js/nav.js"></script>
 </body>  
 </html>

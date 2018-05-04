@@ -19,6 +19,7 @@ package com.intel.cosbench.controller.web;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.http.*;
@@ -35,19 +36,20 @@ import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
 import jxl.write.Label;
-import jxl.write.WritableCell;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 
 public class ImportUser extends UserManagementController {
-
-	@Override
-    protected ModelAndView process(HttpServletRequest req,
-            HttpServletResponse res) throws Exception {
-		writeUser2Excel(req);
-		return process();
-    }
-    
+	
+	protected ModelAndView process(HttpServletRequest req) {
+    	ModelAndView result = new ModelAndView("userManagement");
+    	List<User> allUsers = new ArrayList<User>();
+    	writeUser2Excel(req);
+		readUserFromExcel(allUsers);
+    	result.addObject("users", allUsers);
+    	return result;
+	}
+	
     public void writeUser2Excel(HttpServletRequest req) 
     {  
     	List<User> importUsers = new ArrayList<User>();
@@ -63,18 +65,15 @@ public class ImportUser extends UserManagementController {
                     String cellinfo = sheet.getCell(j, i).getContents();  
                     switch (j) {
 					case 0:
-						user.setId(cellinfo);
-						break;
-					case 1:
 						user.setUserName(cellinfo);
 						break;
-					case 2:
+					case 1:
 						user.setPassword(cellinfo);
 						break;
-					case 3:
+					case 2:
 						user.setUserGroup(cellinfo);
 						break;
-					case 4:
+					case 3:
 						user.setDescription(cellinfo);
 						break;
 
@@ -82,13 +81,12 @@ public class ImportUser extends UserManagementController {
 						break;
 					}
                 }
-                importUsers.add(user);
+                if (!user.getUserName().equals("")) {
+                	importUsers.add(user);
+				}
             }  
-            System.out.println("importUsers:" + importUsers.toString());
-            System.out.println("importUsers.size():" + importUsers.size());
-            System.out.println(importUsers.get(0).getUserName());
-            System.out.println(importUsers.get(1).getUserName());
-            System.out.println(importUsers.get(2).getUserName());
+            
+            judgeUserExist(importUsers);
             
             File directory = new File("");
             String courseFile = directory.getCanonicalPath();
@@ -151,5 +149,25 @@ public class ImportUser extends UserManagementController {
             if (item.getFieldName().equals("user"))
                 return item.getInputStream();
         throw new BadRequestException();
+    }
+    
+    //judge if users to be imported are existed
+    private void judgeUserExist(List<User> importUsers) {
+    	List<User> existUsers = new ArrayList<User>();
+        super.readUserFromExcel(existUsers);
+        System.out.println("ExistUsersSize:" + existUsers.size());
+        Iterator<User> existUsersIterator = existUsers.iterator();
+        while (existUsersIterator.hasNext()) {
+			User existUser = (User) existUsersIterator.next();
+			Iterator<User> importUsersIterator = importUsers.iterator();
+			while (importUsersIterator.hasNext()) {
+				User importUser = (User) importUsersIterator.next();
+				if (importUser.getUserName().equals(existUser.getUserName()) && 
+						importUser.getUserGroup().equals(existUser.getUserGroup())) {
+					importUsersIterator.remove();
+					System.out.println("user " + importUser.getUserName() + " is already exist");
+				}
+			}
+		}
     }
 }
