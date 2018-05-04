@@ -18,7 +18,7 @@ import com.intel.cosbench.config.Config;
 import com.intel.cosbench.driver.util.ContainerPicker;
 import com.intel.cosbench.driver.util.HashUtil;
 import com.intel.cosbench.driver.util.ObjectPicker;
-import com.intel.cosbench.driver.util.ScopePicker;
+import com.intel.cosbench.driver.util.SizePicker;
 import com.intel.cosbench.service.AbortedException;
 
 public class Ranger extends AbstractOperator{
@@ -28,11 +28,10 @@ public class Ranger extends AbstractOperator{
 	private boolean hashCheck = false;
 
     private ObjectPicker objPicker = new ObjectPicker();
-    private ScopePicker scopPicker = new ScopePicker();
+    private SizePicker   sizePicker = new SizePicker();
     
     private byte buffer[] = new byte[1024*1024];
     
-    private File folder;
 	public Ranger() {
         /* empty */
     }
@@ -40,7 +39,7 @@ public class Ranger extends AbstractOperator{
 	protected void init(String id, int ratio, String division, Config config) {
 		 super.init(id, ratio, division, config);
 		 objPicker.init(division, config);
-		 scopPicker.init(config);
+		 sizePicker.init(config);
 	}
 
 	@Override
@@ -51,37 +50,64 @@ public class Ranger extends AbstractOperator{
 	@Override
 	protected void operate(int idx, int all, Session session) {
 		String[] path = objPicker.pickObjPath(session.getRandom(), idx, all);
-		String scope = scopPicker.pickScope(session.getRandom());
-		System.out.println(scope);
-//		NullOutputStream out = new NullOutputStream();
-//		Sample sample = doRange(out, path[0], path[1], config, session);
-//		session.getListener().onSampleCreated(sample);
-//		Date now = sample.getTimestamp();
-//		Result result = new Result(now, getId(), getOpType(), getSampleType(),
-//				getName(), sample.isSucc());
-//		session.getListener().onOperationCompleted(result);
+		long range = sizePicker.pickObjSize(session.getRandom()); 
+		NullOutputStream out = new NullOutputStream();
+	
+		System.out.println("bucket name£º"+path[0]);
+		System.out.println("object name£º"+path[1]);
+		System.out.println("range size£º"+range);
+		
+		Sample sample = doRange(out, path[0], path[1], config, session,range);
+		
+		session.getListener().onSampleCreated(sample);
+		Date now = sample.getTimestamp();
+		Result result = new Result(now, getId(), getOpType(), getSampleType(),
+				getName(), sample.isSucc());
+		session.getListener().onOperationCompleted(result);
 	}
 	 private Sample doRange(OutputStream out, String conName, String objName,
-	            Config config, Session session,String scope) {
+	            Config config, Session session,long range) {
+		 	
 	        if (Thread.interrupted())
 	            throw new AbortedException();
 
 	        InputStream in = null;
+	        InputStream shardFlow = null;
 	        CountingOutputStream cout = new CountingOutputStream(out);
 
 	        long start = System.nanoTime();
 	        long xferTime = 0L;
 	        try {
-	        	in =session.getApi().downloadByRange(conName, objName, config, scope);
+	        	
+	        	in =session.getApi().getObject(conName, objName, config);
 	            long xferStart = System.nanoTime();
 	            if (!hashCheck) {
 	                copyLarge(in, cout);
+	                
+	                long size = cout.getByteCount();
+	                //long size = 10000;
+	                
+	                System.out.println("object size£º"+size);
+	                
+	                long shards = (size%range)==0 ? (size/range) : (size/range+1);
+	                System.out.println("shard number£º"+shards);
+	                for (int i = 0; i < shards; i++) {
+	                	long startRange = i*range;
+	                	long endRange   = startRange+range-1;
+	                	if(i==shards-1) {
+	                		shardFlow = session.getApi().getObjectByRange(conName, objName, config, startRange, size);
+	                	}else {
+						shardFlow = session.getApi().getObjectByRange(conName, objName, config, startRange, endRange);
+						copy(shardFlow,cout);
+	                	}
+					}
 	            } else if (!validateChecksum(conName, objName, session, in, cout)) {
 					return new Sample(new Date(), getId(), getOpType(),
 							getSampleType(), getName(), false);
 	            }
 	            long xferEnd = System.nanoTime();
 	            xferTime = (xferEnd - xferStart) / 1000000;
+	            
 	        } catch (StorageInterruptedException sie) {
 	            doLogErr(session.getLogger(), sie.getMessage(), sie);
 	            throw new AbortedException();
@@ -104,6 +130,12 @@ public class Ranger extends AbstractOperator{
 			throws IOException
 	{
 		IOUtils.copyLarge(input, output);
+		return output;
+	}
+	public OutputStream copy(InputStream input,OutputStream output) 
+			throws IOException
+	{
+		IOUtils.copy(input, output);
 		return output;
 	}
 	private static boolean validateChecksum(String conName, String objName,
