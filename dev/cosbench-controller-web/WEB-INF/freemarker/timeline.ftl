@@ -7,6 +7,8 @@
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
 	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
+	<script src="resources/js/jquery-1.10.2.min.js"></script>
+	
   <title>Stage Timeline Status</title>
 </head>
 <body>
@@ -58,8 +60,6 @@
 		<#include "footer.ftl">
 	</div>
 
-	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
-	<script src="resources/js/nav.js"></script>
 </body>
 </html>

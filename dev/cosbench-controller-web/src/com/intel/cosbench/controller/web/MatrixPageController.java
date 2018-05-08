@@ -39,6 +39,7 @@ public class MatrixPageController extends AbstractController {
     protected ModelAndView process(HttpServletRequest req,
             HttpServletResponse res) throws Exception {
         ModelAndView result = new ModelAndView("matrix");
+        controller.setloadArch(true);
         String[] ops = req.getParameterValues("ops");
         if (ops != null && ops.length > 0)
             for (String op : ops)
@@ -74,6 +75,7 @@ public class MatrixPageController extends AbstractController {
         	result.addObject("hInfos", controller.getArchivedWorkloads());
         }
         result.addObject("type", req.getParameter("type"));
+        
         return result;
     }
 

@@ -12,6 +12,8 @@
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
 	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
+	<script src="resources/js/jquery-1.10.2.min.js"></script>
+	
   <title>Stage Details</title>
 </head>
 <body>
@@ -22,11 +24,6 @@
 		<div id="main">
 		<div class="top"><br /></div>
 		<div class="content">
-		  <p>
-			<a href="index.html">index</a> ->
-			<a href="workload.html?id=${wInfo.id}">workload</a> ->
-			<span>stage</span>
-		  </p>
 		  <h2>Stage</h2>
 		  <h3>Basic Info</h3>
 		  <p>
@@ -131,15 +128,12 @@
 		  <#else>
 			<p class="warn">As the stage has not been run yet, no task information is available right now.</p>
 		  </#if>
-		  <p><a href="workload.html?id=${wInfo.id}">go back to workload</a></p>
 		</div> <#-- end of content -->
 		<div class="bottom"><br /></div>
 		</div> <#-- end of main -->
 		<#include "footer.ftl">
 	</div>
 	
-	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
-	<script src="resources/js/nav.js"></script>
 </body>
 </html>

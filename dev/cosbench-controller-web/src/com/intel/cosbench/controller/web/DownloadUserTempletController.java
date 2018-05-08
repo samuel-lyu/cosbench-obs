@@ -53,7 +53,7 @@ public class DownloadUserTempletController extends UserManagementController {
 
     }
 
-    protected ModelAndView process() {
+    protected ModelAndView process(HttpServletRequest req) {
         File file = new File("user\\user-templet.xls");
         return new ModelAndView(USER, "user", file);
     }
