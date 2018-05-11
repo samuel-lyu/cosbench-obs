@@ -17,6 +17,7 @@ limitations under the License.
 
 package com.intel.cosbench.api.storage;
 
+import java.io.File;
 import java.io.InputStream;
 
 import com.intel.cosbench.api.context.*;
@@ -168,14 +169,42 @@ public interface StorageAPI {
      */
     public Boolean isAuthValid();
     /**
-     * DownloadByRange
+     * getObjectByRange
      * 
      * @param container
      *            - the name of a container.
      * @param object
-     *            - the name of an object to be deleted.
+     *            - the name of an object.
      * @param config
      *            - the configuration used for this operation.
+     * @param startRange
+     * 			  - the start of one range
+     * @param endRange
+     * 			  - the end of one range
      */
     public InputStream getObjectByRange(String container, String object, Config config, long startRange, long endRange);
+    
+    /**
+     * multiPartUpload
+     * 
+     * @param container
+     *            - the name of a container.
+     * @param object
+     *            - the name of an object.
+     * @param sizePart
+     *            - the size of one part.
+     */
+    public void multiPartUpload(String container, String object, long sizePart, InputStream in);
+    
+    /**
+     * deleteObjects
+     * 
+     * @param container
+     *            - the name of a container.
+     * @param config
+     *            - the configuration used for this operation.
+     * @param amount
+     *            - the amount of deleted objects.
+     */
+    public void deleteObjects(String container, Config config, int amount);
 }

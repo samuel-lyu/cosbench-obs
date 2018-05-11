@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<workload name="demo" description="demo benchmark">
+  <auth type="none" />
+  <storage type="obs"  config="accesskey=RQGSAZ7VKAL3KT7P66UW;secretkey=VkDua1YZ3mtRE4wSZZ2U5Ik4LyswuEpzqfFO7js9;endpoint=obs.cn-north-1.myhwclouds.com"/>
+  <workflow>
+  
+	<workstage name="init">
+		 <work type="init" workers="1" config="cprefix=obstest;containers=r(1,2)" />
+	</workstage>
+	
+	<workstage name="prepare">
+      <work type="prepare" workers="1" config="cprefix=obstest;containers=r(1,2);objects=r(1,10);sizes=c(64)KB" />
+    </workstage>
+	
+    <workstage name="main">
+      <work name="main" workers="1" runtime="30">
+        <operation type="write" ratio="100" config="cprefix=obstest;containers=c(2);objects=c(11);sizes=c(10)GB;partSize=c(5)MB"/>
+	  </work>
+    </workstage>
+	
+	<workstage name="cleanup">
+      <work type="cleanup" workers="1" config="cprefix=obstest;containers=r(1,2);objects=r(1,20)" />
+    </workstage>
+	
+	<workstage name="dispose">
+      <work type="dispose" workers="1" config="cprefix=obstest;containers=r(1,2)" />
+    </workstage>
+	
+  </workflow>
+</workload>

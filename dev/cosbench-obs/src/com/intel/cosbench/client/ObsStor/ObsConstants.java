@@ -11,7 +11,7 @@ public interface ObsConstants {
     // ENDPOINT
     // --------------------------------------------------------------------------
     String ENDPOINT_KEY = "endpoint";
-    String ENDPOINT_DEFAULT = "http://s3.amazonaws.com";
+    String ENDPOINT_DEFAULT = "http://obs.cn-north-1.myhwclouds.com";
 
     // --------------------------------------------------------------------------
     // AUTHENTICATION

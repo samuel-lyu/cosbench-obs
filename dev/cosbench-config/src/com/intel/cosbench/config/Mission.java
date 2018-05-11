@@ -251,10 +251,48 @@ public class Mission implements Iterable<Operation> {
         for (Operation op : operations)
             op.validate();
         int sum = 0;
+        long size = 0;
         for (Operation op : operations)
             sum += op.getRatio();
         if (sum != 100)
             throw new ConfigException("op ratio should sum to 100");
+//        for(Operation op : operations) {
+//        	String conf = op.getConfig();
+//        	System.out.println("aa");
+//        	if(conf.contains("partSize")) {
+//        		 size = getPartSize(conf);
+//        	}
+//        }
+//        if(size > 5*1000 * 1000 * 1000 || size < 5 * 1000 * 1000)
+//        	throw new ConfigException("partSize should between 5MB and 5GB");
+    }
+    
+    private long getPartSize(String pattern) {
+    	long base = setUnit(pattern);
+    	long size = 0;
+    	String[] keys = pattern.split(";");
+    	for (int i = 0; i < keys.length; i++) {
+			if(keys[i].contains("partSize")) {
+				String value = (keys[i].split("="))[1];
+				String temp =StringUtils.substringBetween(value,"(", ")");
+				String[] args = StringUtils.split(temp, ',');
+				size = Integer.parseInt(args[0]);
+			}
+		}
+    	return size*base;
+    }
+    
+    private long setUnit(String unit) {
+        if (StringUtils.endsWith(unit, "GB"))
+            return 1000 * 1000 * 1000;
+        if (StringUtils.endsWith(unit, "MB"))
+            return  1000 * 1000;
+        if (StringUtils.endsWith(unit, "KB"))
+            return 1000;
+        if (StringUtils.endsWith(unit, "B"))
+            return  1;
+        String msg = "unrecognized size unit: " + unit;
+        throw new ConfigException(msg);
     }
 
 }

@@ -3,18 +3,37 @@ package com.intel.cosbench.api.ObsStor;
 import static com.intel.cosbench.client.ObsStor.ObsConstants.*;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.http.HttpStatus;
 
-import com.amazonaws.*;
-import com.amazonaws.auth.*;
-import com.amazonaws.services.s3.*;
-import com.amazonaws.services.s3.model.*;
+
+
 
 import com.intel.cosbench.api.storage.*;
 import com.intel.cosbench.api.context.*;
 import com.intel.cosbench.config.Config;
 import com.intel.cosbench.log.Logger;
+
+import com.obs.services.HttpProxyConfiguration;
+import com.obs.services.ObsClient;
+import com.obs.services.ObsConfiguration;
+import com.obs.services.exception.ObsException;
+import com.obs.services.model.CompleteMultipartUploadRequest;
+import com.obs.services.model.CompleteMultipartUploadResult;
+import com.obs.services.model.DeleteObjectsRequest;
+import com.obs.services.model.GetObjectRequest;
+import com.obs.services.model.InitiateMultipartUploadRequest;
+import com.obs.services.model.InitiateMultipartUploadResult;
+import com.obs.services.model.KeyAndVersion;
+import com.obs.services.model.ObjectListing;
+import com.obs.services.model.ObjectMetadata;
+import com.obs.services.model.ObsObject;
+import com.obs.services.model.PartEtag;
+import com.obs.services.model.S3Object;
+import com.obs.services.model.UploadPartResult;
 
 public class ObsStorage extends NoneStorage{
 	private int timeout;
@@ -23,7 +42,7 @@ public class ObsStorage extends NoneStorage{
 	private String secretKey;
 	private String endpoint;
 
-	private AmazonS3 client;
+	private ObsClient client;
 
 	@Override
 	public void init(Config config, Logger logger) {
@@ -51,16 +70,23 @@ public class ObsStorage extends NoneStorage{
 
         logger.debug("using storage config: {}", parms);
         
-        ClientConfiguration clientConf = new ClientConfiguration();
-        clientConf.setConnectionTimeout(timeout);
-        clientConf.setSocketTimeout(timeout);
-        clientConf.withUseExpectContinue(false);
-        clientConf.withSignerOverride("S3SignerType");
+        ObsConfiguration obsConf = new ObsConfiguration();
+        HttpProxyConfiguration httpConf = new HttpProxyConfiguration();
+        
+        obsConf.setConnectionTimeout(timeout);
+        obsConf.setSocketTimeout(timeout);
+        obsConf.setEndPoint(endpoint);
+        
+//        clientConf.withUseExpectContinue(false);
+//        clientConf.withSignerOverride("S3SignerType");
 //        clientConf.setProtocol(Protocol.HTTP);
 		if((!proxyHost.equals(""))&&(!proxyPort.equals(""))){
-			clientConf.setProxyHost(proxyHost);
-			clientConf.setProxyPort(Integer.parseInt(proxyPort));
+			httpConf.setProxyAddr(proxyHost);
+			httpConf.setProxyPort(Integer.parseInt(proxyPort));
 		}
+		
+		
+		client = new ObsClient(accessKey, secretKey, obsConf);
 	}
 
 	@Override
@@ -73,7 +99,12 @@ public class ObsStorage extends NoneStorage{
 	public void dispose() {
 		// TODO Auto-generated method stub
 		super.dispose();
-		client = null;
+		try {
+			client.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -96,7 +127,7 @@ public class ObsStorage extends NoneStorage{
 		// TODO Auto-generated method stub
 		super.createContainer(container, config);
 		try {
-        	if(!client.doesBucketExist(container)) {
+        	if(!client.headBucket(container)) {
 	        	
 	            client.createBucket(container);
         	}
@@ -126,11 +157,11 @@ public class ObsStorage extends NoneStorage{
 		// TODO Auto-generated method stub
 		super.deleteContainer(container, config);
 		try {
-        	if(client.doesBucketExist(container)) {
+        	if(client.headBucket(container)) {
         		client.deleteBucket(container);
         	}
-        } catch(AmazonS3Exception awse) {
-        	if(awse.getStatusCode() != HttpStatus.SC_NOT_FOUND) {
+        } catch(ObsException awse) {
+        	if(Integer.parseInt(awse.getErrorCode()) != HttpStatus.SC_NOT_FOUND) {
         		throw new StorageException(awse);
         	}
         } catch (Exception e) {
@@ -144,8 +175,8 @@ public class ObsStorage extends NoneStorage{
 		super.deleteObject(container, object, config);
 		try {
             client.deleteObject(container, object);
-        } catch(AmazonS3Exception awse) {
-        	if(awse.getStatusCode() != HttpStatus.SC_NOT_FOUND) {
+        } catch(ObsException awse) {
+        	if(Integer.parseInt(awse.getErrorCode()) != HttpStatus.SC_NOT_FOUND) {
         		throw new StorageException(awse);
         	}
         } catch (Exception e) {
@@ -162,12 +193,95 @@ public class ObsStorage extends NoneStorage{
 		super.getObjectByRange(container, object, config, startRange, endRange);     
 
 		GetObjectRequest rangeObjectRequest = new GetObjectRequest(container, object);
-		rangeObjectRequest.setRange(startRange,endRange); // retrieve 1st 11 bytes.
+		rangeObjectRequest.	setRangeStart(startRange);
+		rangeObjectRequest.setRangeEnd(endRange);
 		S3Object objectPortion = client.getObject(rangeObjectRequest);
 
 		InputStream objectData = objectPortion.getObjectContent();
 		// Process the objectData stream.
 		return objectData;
 	}
+
+	@Override
+	public void multiPartUpload(String container, String object, long sizePart, InputStream in) {
+		super.multiPartUpload(container, object, sizePart, in);
+		
+		try {
+			System.out.println(in.available());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		UploadPartResult uploadPart = null; 
+		List<PartEtag> partEtags = new ArrayList<PartEtag>();
+		PartEtag partEtag = new PartEtag();
+		
+		//do init
+		InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest();
+		initRequest.setBucketName(container);
+		initRequest.setObjectKey(object);
+		InitiateMultipartUploadResult imu = client.initiateMultipartUpload(initRequest);
+		System.out.println("bucketName:" + imu.getBucketName()
+        + "\tObjectKey:" + imu.getObjectKey()
+        + "\tUploadId:" + imu.getUploadId());
+		
+		//do upload
+		String uploadId =imu.getUploadId();
+		long uploadedLength = 0;
+		int partNumber = 1;
+		
+		try {
+			while(uploadedLength < in.available() ){
+				client.uploadPart(imu.getBucketName(), imu.getObjectKey(), uploadId, partNumber, in);
+			    //The set of segments to be merged.
+			    System.out.println(partNumber + " part is : " + uploadPart.getEtag());
+			    partEtag.seteTag(uploadPart.getEtag());
+			    partEtag.setPartNumber(uploadPart.getPartNumber());
+			    partEtags.add(partEtag);
+			    
+			    partNumber++;
+			    uploadedLength += sizePart;
+			}
+		} catch (ObsException e) {
+			System.out. println("Error message: " + e.getErrorMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	    
+		//complete multiPartUpload
+		CompleteMultipartUploadRequest request = new CompleteMultipartUploadRequest();
+		request.setPartEtag(partEtags);
+		request.setUploadId(imu.getUploadId());
+		CompleteMultipartUploadResult result = client.completeMultipartUpload(request);
+		System.out.println("ObjectKey: "+result. getObjectKey() + ", Etag: " + result.getEtag());
+		
+	}
+
+	@Override
+	public void deleteObjects(String container, Config config, int amount) {
+		super.deleteObjects(container, config, amount);
+		int flag = 0;
+		ObsObject obsObject;
+		DeleteObjectsRequest requst = new DeleteObjectsRequest();
+		KeyAndVersion[] keyAndVersions = new KeyAndVersion[amount];
+		
+		requst.setBucketName(container);
+		ObjectListing result = client.listObjects(container);
+	    Iterator<ObsObject> itr = result.getObjects().iterator();
+	    //get the sets of objects
+	    while(itr.hasNext() && flag < amount) {
+	    	obsObject = (ObsObject)itr.next();
+	    	System.out.println(obsObject.getObjectKey());
+	    	keyAndVersions[flag] = new KeyAndVersion(obsObject.getObjectKey());
+	    	requst.setKeyAndVersions(keyAndVersions);
+	    	flag++;
+	    }
+	    
+	    client.deleteObjects(requst);
+	}
+
+
 	
 }

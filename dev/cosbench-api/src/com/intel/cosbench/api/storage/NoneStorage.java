@@ -138,6 +138,20 @@ public class NoneStorage implements StorageAPI {
             logger.info("performing GET by range at /{}/{}", container, object);
     	return new ByteArrayInputStream(new byte[] {});
 	}
+    
+    
+
+	@Override
+	public void multiPartUpload(String container, String object, long sizePart, InputStream in) {
+		if (logging)
+            logger.info("performing PUT by multiPart at /{}/{}", container, object);
+	}
+
+	@Override
+	public void deleteObjects(String container, Config config, int amount) {
+		if (logging)
+            logger.info("performing delete objects at /{}", container);
+	}
 
 	protected void createMetadata(String container, String object,
             Map<String, String> map, Config config) {

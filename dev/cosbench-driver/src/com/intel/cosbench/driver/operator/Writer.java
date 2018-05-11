@@ -22,11 +22,13 @@ import java.util.Date;
 import java.util.Random;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.intel.cosbench.api.storage.StorageInterruptedException;
 import com.intel.cosbench.bench.Result;
 import com.intel.cosbench.bench.Sample;
 import com.intel.cosbench.config.Config;
+import com.intel.cosbench.config.ConfigException;
 import com.intel.cosbench.driver.generator.RandomInputStream;
 import com.intel.cosbench.driver.generator.XferCountingInputStream;
 import com.intel.cosbench.driver.util.ObjectPicker;
@@ -45,10 +47,12 @@ class Writer extends AbstractOperator {
 
     private boolean chunked;
     private boolean isRandom;
+    private long partSize = 0;
+    private long base;
     private boolean hashCheck = false;
     private ObjectPicker objPicker = new ObjectPicker();
     private SizePicker sizePicker = new SizePicker();
-
+    
     public Writer() {
         /* empty */
     }
@@ -61,6 +65,11 @@ class Writer extends AbstractOperator {
         chunked = config.getBoolean("chunked", false);
         isRandom = !config.get("content", "random").equals("zero");
         hashCheck = config.getBoolean("hashCheck", false);
+        if(config.get("partSize") != null) {
+        	partSize = pase(config.get("partSize"));
+        	System.out.println(config.get("partSize"));
+        	System.out.println(partSize);
+        }
     }
 
     @Override
@@ -70,14 +79,24 @@ class Writer extends AbstractOperator {
 
     @Override
     protected void operate(int idx, int all, Session session) {
+    	Sample sample;
         Random random = session.getRandom();
         long size = sizePicker.pickObjSize(random);
         long len = chunked ? -1 : size;
         String[] path = objPicker.pickObjPath(random, idx, all);
         RandomInputStream in = new RandomInputStream(size, random, isRandom,
                 hashCheck);
-		Sample sample = doWrite(in, len, path[0], path[1], config, session,
-				this);
+        
+        //Determine whether to Multistage
+        if(partSize == 0) {
+        	sample = doWrite(in, len, path[0], path[1], config, session,
+    				this);
+        }else {
+        	sample = putObjectByMultistage(in, len, path[0], path[1], partSize, config, session,
+    				this);
+        }
+        
+        
         session.getListener().onSampleCreated(sample);
         Date now = sample.getTimestamp();
 		Result result = new Result(now, getId(), getOpType(), getSampleType(),
@@ -114,6 +133,57 @@ class Writer extends AbstractOperator {
 		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
 				op.getName(), true, (end - start) / 1000000,
 				cin.getXferTime(), cin.getByteCount());
+    }
+    
+    public static Sample putObjectByMultistage(InputStream in, long length, String conName,
+            String objName, long partSize, Config config, Session session, Operator op) {
+    	if (Thread.interrupted())
+            throw new AbortedException();
+        
+        XferCountingInputStream cin = new XferCountingInputStream(in);	
+        long start = System.nanoTime();
+
+        try {
+            session.getApi().multiPartUpload(conName, objName, partSize, cin);
+        } catch (StorageInterruptedException sie) {
+            doLogErr(session.getLogger(), sie.getMessage(), sie);
+            throw new AbortedException();
+        } catch (Exception e) {
+        	isUnauthorizedException(e, session);
+        	errorStatisticsHandle(e, session, conName + "/" + objName);
+        	
+			return new Sample(new Date(), op.getId(), op.getOpType(),
+					op.getSampleType(), op.getName(), false);
+			
+        } finally {
+            IOUtils.closeQuietly(cin);
+        }
+
+        long end = System.nanoTime();
+		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
+				op.getName(), true, (end - start) / 1000000,
+				cin.getXferTime(), cin.getByteCount());
+    }
+    
+    private long pase(String pattern) {
+    	base = setUnit(pattern);
+    	pattern = StringUtils.substringBetween(pattern, "(", ")");
+        String[] args = StringUtils.split(pattern, ',');
+        Integer value = Integer.parseInt(args[0]);
+    	return value*base;
+    }
+    
+    private long setUnit(String unit) {
+        if (StringUtils.endsWith(unit, "GB"))
+            return (base = 1000 * 1000 * 1000);
+        if (StringUtils.endsWith(unit, "MB"))
+            return (base = 1000 * 1000);
+        if (StringUtils.endsWith(unit, "KB"))
+            return (base = 1000);
+        if (StringUtils.endsWith(unit, "B"))
+            return (base = 1);
+        String msg = "unrecognized size unit: " + unit;
+        throw new ConfigException(msg);
     }
     /*
      * public static Sample doWrite(byte[] data, String conName, String objName,
