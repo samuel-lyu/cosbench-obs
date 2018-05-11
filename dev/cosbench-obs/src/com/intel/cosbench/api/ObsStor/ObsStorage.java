@@ -70,6 +70,7 @@ public class ObsStorage extends NoneStorage{
 
         logger.debug("using storage config: {}", parms);
         
+        //config the basic information
         ObsConfiguration obsConf = new ObsConfiguration();
         HttpProxyConfiguration httpConf = new HttpProxyConfiguration();
         
@@ -85,7 +86,7 @@ public class ObsStorage extends NoneStorage{
 			httpConf.setProxyPort(Integer.parseInt(proxyPort));
 		}
 		
-		
+		//create obs client
 		client = new ObsClient(accessKey, secretKey, obsConf);
 	}
 
