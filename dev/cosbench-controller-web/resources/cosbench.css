@@ -85,6 +85,20 @@ a:visited {
 	margin: auto;
 }
 
+.content section{
+	font-size:100%;
+	font-weight:normal;
+	padding:0px;
+	max-width:90%;
+}
+
+.tabs {
+	margin:-5px 0 0px;
+}
+
+.graph {
+	padding:0px;
+}
 /* ---------------------------------------
  * Header Styles
  * --------------------------------------- */

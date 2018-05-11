@@ -21,8 +21,12 @@ import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.intel.cosbench.config.Auth;
+import com.intel.cosbench.config.Storage;
 import com.intel.cosbench.config.Work;
 import com.intel.cosbench.controller.model.*;
+import com.intel.cosbench.log.LogFactory;
+import com.intel.cosbench.log.Logger;
 
 /**
  * This class encapsulates one balanced scheduler, which tries best to evenly
@@ -32,6 +36,7 @@ import com.intel.cosbench.controller.model.*;
  * 
  */
 class BalancedScheduler extends AbstractScheduler {
+	private static final Logger LOGGER = LogFactory.getSystemLogger();
 
     private int allocIdx;
     private int[] allocMap;
@@ -93,15 +98,122 @@ class BalancedScheduler extends AbstractScheduler {
         int idx = 0;
         int offset = 0;
         int workers = 0;
+        Work[] scheduleUserWorkArray = scheduleUserWork(work, allocMap);
         for (DriverContext driver : drivers.values()) {
-            if ((workers = allocMap[idx++]) == 0)
+            if ((workers = allocMap[idx]) == 0)
                 continue;
-            schedules
-                    .addSchedule(createSchedule(work, driver, offset, workers));
+            schedules.addSchedule(createSchedule(scheduleUserWorkArray[idx], driver, offset, workers));
             offset += workers;
+            idx++;
         }
     }
 
+    /**
+     * according to the workers of the driver , balance users
+     * @param work
+     * @param allocMap
+     * 		allocMap is an array which record workers that each driver has,
+     * 		zero means that the @param work does not perform on this driver
+     * @return
+     *     return workArray after balance users
+     */
+    private Work[] scheduleUserWork(Work work, int[] allocMap) {
+        String primitiveAuthConfig = work.getAuth().getConfig();
+        LOGGER.debug("The primitive authConfig of the work {} is : {}", work.getName(), primitiveAuthConfig);
+        System.out.println("The primitive authConfig of the work is : " + primitiveAuthConfig);
+        String primitiveStorageConfig = work.getStorage().getConfig();
+        LOGGER.debug("The primitive storageConfig  of the work {} is : {}", work.getName(), primitiveStorageConfig);
+        System.out.println("The primitive storageConfig of the work is : " + primitiveStorageConfig);
+        //count the number of driver that the work will perform on
+        int toUseDriverNum = 0;
+        for (int i = 0; i < allocMap.length; i++) {
+			if (allocMap[i] > 0) {
+				toUseDriverNum = i+1;
+			}
+		}
+        
+        String[] authConfigArray = balanceUserConfig(toUseDriverNum, primitiveAuthConfig);
+        String[] storageConfigArray = balanceUserConfig(toUseDriverNum, primitiveStorageConfig);
+        
+        Work[] balanceUserWork = new Work[toUseDriverNum];
+        for (int i = 0; i < balanceUserWork.length; i++) {
+			balanceUserWork[i] = workConfigClone(work, authConfigArray[i], storageConfigArray[i]);
+		}
+    	return balanceUserWork;
+    }
+    
+    /**
+     * 
+     * @param toUseDriverNum
+     * 		TousDeCurvNUM determines the number of parts that the user will be divided into.
+     * @param primitiveConfig
+     * 		primitiveConfig contains all users
+     * @return
+     */
+    private String[] balanceUserConfig(int toUseDriverNum, String primitiveConfig) {
+    	String primitiveConfigStr = StringUtils.isEmpty(primitiveConfig) ? "" : primitiveConfig;
+    	String[] primitiveConfigArray = primitiveConfigStr.split(";");
+        String[] configArray = new String[toUseDriverNum];
+        for (int i = 0; i < configArray.length; i++) configArray[i] = "";
+        if (!StringUtils.isEmpty(primitiveConfigStr)) {
+        	int totalUserNum = primitiveConfigArray.length / 2;
+        	int base = totalUserNum / toUseDriverNum;
+        	int extra = totalUserNum % toUseDriverNum;
+        	
+        	for (int i = 0; i < toUseDriverNum; i++) {
+        		for (int j = 0; j < base; j++) {
+        			configArray[i] += primitiveConfigArray[(i * base + j) * 2] + ";";
+        			configArray[i] += primitiveConfigArray[(i * base + j) * 2 + 1] + ";";
+				}
+        	}
+            for (int i = 0; i < extra; i++) {
+            	configArray[i] += primitiveConfigArray[(base * toUseDriverNum + i) * 2] + ";";
+            	configArray[i] += primitiveConfigArray[(base * toUseDriverNum + i) * 2 + 1] + ";";
+            }
+            if (base == 0 && totalUserNum > 0) {
+				for (int i = extra; i < toUseDriverNum; i++) {
+					Random random = new Random();
+					int reed = random.nextInt(totalUserNum);
+					configArray[i] = primitiveConfigArray[(reed) * 2] + ";";
+					configArray[i] = primitiveConfigArray[(reed) * 2 + 1] + ";";
+				}
+			}
+            for (int i = 0; i < toUseDriverNum; i++) {
+        		configArray[i] += primitiveConfigArray[primitiveConfigArray.length - 1];
+        	}
+		}
+        
+        return configArray;
+	}
+    
+    /**
+     * Generate different work according to original work and different user configuration.
+     * @param work
+     * @param authConfig
+     * @param storageConfig
+     * @return
+     */
+    private Work workConfigClone(Work work, String authConfig, String storageConfig) {
+    	Work newWork = new Work();
+    	newWork.setName(work.getName());
+        newWork.setType(work.getType());
+        newWork.setWorkers(work.getWorkers());
+        newWork.setInterval(work.getInterval());
+        newWork.setDivision(work.getDivision());
+        newWork.setRuntime(work.getRuntime());
+        newWork.setRampup(work.getRampup());
+        newWork.setRampdown(work.getRampdown());
+        newWork.setAfr(work.getAfr());
+        newWork.setTotalOps(work.getTotalOps());
+        newWork.setTotalBytes(work.getTotalBytes());
+        newWork.setDriver(work.getDriver());
+        newWork.setConfig(work.getConfig());
+        newWork.setAuth(new Auth(work.getAuth().getType(), authConfig));
+        newWork.setStorage(new Storage(work.getStorage().getType(), storageConfig));
+        newWork.setOperations(work.getOperations());
+    	return newWork;
+	}
+    
     private DriverContext fetchDriver(String name) {
         if (StringUtils.isEmpty(name))
             return null;

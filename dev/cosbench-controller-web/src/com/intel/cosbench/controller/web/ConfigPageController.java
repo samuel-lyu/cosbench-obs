@@ -72,6 +72,11 @@ public class ConfigPageController extends AbstractController {
         return result;
     }
 
+    /**
+     * read all users from local excel file
+     * @param allUsers
+     * allUsers is a collection to storage all users read from excel
+     */
     public void readUserFromExcel(List<User> allUsers) {  
         try {  
         	File directory = new File("");

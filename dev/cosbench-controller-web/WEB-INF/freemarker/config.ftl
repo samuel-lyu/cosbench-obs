@@ -103,13 +103,13 @@
 											<select name="auth.user">
 												<#list userGroupList as userGroup>
 													<#if userGroup_index = 0>
-														<option value=${userGroup} selected="true">userGroup:${userGroup}</option>
+														<option value=userGroup:${userGroup} selected="true">userGroup:${userGroup}</option>
 													<#else>
-														<option value=${userGroup}>userGroup:${userGroup}</option>
+														<option value=userGroup:${userGroup}>userGroup:${userGroup}</option>
 													</#if>
 												</#list>
 												<#list userList as user>
-													<option value=${user}>user:${user}</option>
+													<option value=user:${user}>user:${user}</option>
 												</#list>
 											</select>
 										</td>
@@ -133,13 +133,13 @@
 											<select name="storage.user">
 												<#list userGroupList as userGroup>
 													<#if userGroup_index = 0>
-														<option value=${userGroup} selected="true">userGroup:${userGroup}</option>
+														<option value=userGroup:${userGroup} selected="true">userGroup:${userGroup}</option>
 													<#else>
-														<option value=${userGroup}>userGroup:${userGroup}</option>
+														<option value=userGroup:${userGroup}>userGroup:${userGroup}</option>
 													</#if>
 												</#list>
 												<#list userList as user>
-													<option value=${user}>user:${user}</option>
+													<option value=user:${user}>user:${user}</option>
 												</#list>
 											</select>
 										</td>

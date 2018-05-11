@@ -175,14 +175,63 @@ class MissionHandler {
         storageConfig = KVConfigParser.parse(m.getStorage().getConfig());
         LOGGER.debug("driver mission config  is: "+m.getConfig());
     }
+    
+    /**
+     * to split config string that may contain more one users to an array whose each item only contains one user
+     * @param configStr
+     * 		configStr is the primitive config string which may contain more than one users
+     * @return
+     */
+    private Config[] parseConfigsAssumedMultiuser(String configStr) {
+		String[] strings = configStr.split(";");
+		int totalUser = strings.length / 2;
+		if (totalUser <= 1) {
+			Config[] configs = {KVConfigParser.parse(configStr)};
+			return configs;
+		} else {
+			Config[] configs = new Config[totalUser];
+			String url = strings[strings.length - 1];
+			for (int i = 0; i < configs.length; i++) {
+				String oneUserConfigStr = strings[i*2] + ";" + strings[i*2+1] + ";" + url;
+				configs[i] = KVConfigParser.parse(oneUserConfigStr);
+			}
+			return configs;
+		}
+	}
 
     private void createWorkers() {
         WorkerRegistry registry = new WorkerRegistry();
         Mission mission = missionContext.getMission();
         int workers = mission.getWorkers();
         int offset = mission.getOffset();
-        for (int idx = 1; idx <= workers; idx++)
-            registry.addWorker(createWorkerContext(idx + offset, mission));
+        
+        String authConfigStr = missionContext.getMission().getAuth().getConfig();
+        LOGGER.debug("The primitive authConfig is '{}'", authConfigStr);
+        Config[] authConfigArray = parseConfigsAssumedMultiuser(authConfigStr);
+        String storageConfigStr = missionContext.getMission().getStorage().getConfig();
+        LOGGER.debug("The primitive storageConfig is '{}'", storageConfigStr);
+        Config[] storageConfigArray = parseConfigsAssumedMultiuser(storageConfigStr);
+        for (int idx = 1; idx <= workers; idx++) {
+        	//Distribute the authConfig to each worker
+        	int authConfigNum = authConfigArray.length;
+        	int authConfigIndex = idx % (authConfigNum);
+        	if (authConfigIndex == 0) {
+				authConfig = authConfigArray[authConfigNum - 1];
+			} else {
+				authConfig = authConfigArray[authConfigIndex - 1];
+			}
+        	
+        	//Distribute the storageConfig to each worker
+        	int storageConfigNum = storageConfigArray.length;
+        	int storageConfigIndex = idx % (storageConfigNum);
+        	if (storageConfigIndex == 0) {
+        		storageConfig = storageConfigArray[storageConfigNum - 1];
+        	} else {
+        		storageConfig = storageConfigArray[storageConfigIndex - 1];
+        	}
+        	
+        	registry.addWorker(createWorkerContext(idx + offset, mission));
+        }
         missionContext.setWorkerRegistry(registry);
     }
 
