@@ -44,5 +44,6 @@ public interface Config {
     public boolean getBoolean(String key);
 
     public boolean getBoolean(String key, boolean value);
-
+    
+    public boolean contains(String key);
 }

@@ -96,5 +96,12 @@ class COSBConfigApator implements Config {
         String msg = "no such key defined: " + key;
         throw new ConfigException(msg);
     }
-
+    //processing new fields
+    @Override
+    public boolean contains(String key) {
+    	if (config.containsKey(key)) {
+    		return true;
+    	}
+    	return false;
+    }
 }

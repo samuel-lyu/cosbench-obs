@@ -50,7 +50,7 @@ class Deleter extends AbstractOperator {
     	super.init(id, ratio, division, config);
         objPicker.init(division, config);
         //Get the number of deletes
-        if(config.get("batch") != null) {
+        if(config.contains("batch")) {
         	amount = pase(config.get("batch"));
         	System.out.println("amount:"+amount);
         }

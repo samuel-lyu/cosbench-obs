@@ -52,7 +52,6 @@ class Writer extends AbstractOperator {
     private boolean hashCheck = false;
     private ObjectPicker objPicker = new ObjectPicker();
     private SizePicker sizePicker = new SizePicker();
-    
     public Writer() {
         /* empty */
     }
@@ -65,7 +64,7 @@ class Writer extends AbstractOperator {
         chunked = config.getBoolean("chunked", false);
         isRandom = !config.get("content", "random").equals("zero");
         hashCheck = config.getBoolean("hashCheck", false);
-        if(config.get("partSize") != null) {
+        if(config.contains("partSize")) {
         	partSize = pase(config.get("partSize"));
         	System.out.println(config.get("partSize"));
         	System.out.println(partSize);
