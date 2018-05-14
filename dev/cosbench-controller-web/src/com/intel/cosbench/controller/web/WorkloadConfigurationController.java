@@ -17,21 +17,37 @@ limitations under the License.
 
 package com.intel.cosbench.controller.web;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.*;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
 import com.intel.cosbench.config.*;
 import com.intel.cosbench.config.castor.*;
+import com.intel.cosbench.controller.entity.User;
+import com.intel.cosbench.log.LogFactory;
+import com.intel.cosbench.log.Logger;
 import com.intel.cosbench.service.ControllerService;
 import com.intel.cosbench.web.*;
 
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+
 public class WorkloadConfigurationController extends AbstractController {
+	
+	private static final Logger LOGGER = LogFactory.getSystemLogger();
 
     private static final View XML = new XMLView();    
 
@@ -510,8 +526,27 @@ public class WorkloadConfigurationController extends AbstractController {
     	workload.setName(name);
     	workload.setDescription(desc);
     	
-    	workload.setAuth(new Auth(getParm(req, "auth.type"), getParm(req, "auth.config")));
-    	workload.setStorage(new Storage(getParm(req, "storage.type"), getParm(req, "storage.config")));
+    	String authType = getParm(req, "auth.type");
+    	String authUrlConfig = getParm(req, "auth.url");
+    	String authConfig = "";
+		if (!authType.toLowerCase().equals("none") && !StringUtils.isEmpty(authUrlConfig)) {
+			String authUserConfig = parseUserFromPostData(req, "auth.user");
+			authConfig = authUserConfig + authUrlConfig;
+		}
+    	LOGGER.debug("The authConfig of the workload {} is {}", name, authConfig);
+    	System.out.println(authConfig);
+    	workload.setAuth(new Auth(authType, authConfig));
+    	
+    	String storageType = getParm(req, "storage.type");
+    	String storageUrlConfig = getParm(req, "storage.url");
+    	String storageConfig = "";
+		if (!StringUtils.isEmpty(storageUrlConfig)) {
+			String storageUserConfig = parseUserFromPostData(req, "storage.user");
+			storageConfig = storageUserConfig + storageUrlConfig;
+		}
+		LOGGER.debug("The storageConfig of the workload {} is {}", name, storageConfig);
+    	System.out.println(storageConfig);
+    	workload.setStorage(new Storage(storageType, storageConfig));
 
     	Workflow workflow = new Workflow();
     	
@@ -563,6 +598,118 @@ public class WorkloadConfigurationController extends AbstractController {
     	return workload;
     }
     
+    /**
+     * 
+     * @param req
+     * @param type 
+     * type refers to authUser or storageUser
+     * @return
+     */
+    private String parseUserFromPostData(HttpServletRequest req, String type) {
+    	//obtain existing users
+    	List<User> allUsers = new ArrayList<User>();
+    	readUserFromExcel(allUsers);
+    	//according to the userType, parsing user to userConfig
+    	String user = getParm(req, type);
+    	String[] userArray = user.split(":");
+    	if (userArray[0].equals("userGroup")) {
+    		String groupName = userArray[1];
+			return obtainConfigByUserGroupName(allUsers, groupName);
+		}
+    	else if (userArray[0].equals("user")) 
+    	{
+    		String userName = userArray[1];
+    		return obtainConfigByUserName(allUsers, userName);
+		}
+    	return null;
+	}
+    
+    
+    /**
+     * obtain all user whose group is @param groupName
+     * @param allUsers
+     * @param groupName
+     * @return
+     */
+    private String obtainConfigByUserGroupName(List<User> allUsers, String groupName) {
+    	String userConfig = "";
+		for (User user : allUsers) {
+			if (user.getUserGroup().equals(groupName)) {
+				userConfig = userConfig + user.getUserName() + ";" + user.getPassword() + ";";
+			}
+		}
+    	return userConfig;
+	}
+    
+    /**
+     * obtain user whose userName is @param userName
+     * @param allUsers
+     * @param userName
+     * @return
+     */
+    private String obtainConfigByUserName(List<User> allUsers, String userName) {
+    	String userConfig = "";
+		for (User user : allUsers) {
+			if (user.getUserName().equals(userName)) {
+				userConfig = userConfig + user.getUserName() + ";" + user.getPassword() + ";";
+				break;
+			}
+		}
+    	return userConfig;
+    }
+    
+    /**
+     * read all users from local excel file
+     * @param allUsers
+     * allUsers is a collection to storage all users read from excel
+     */
+    public void readUserFromExcel(List<User> allUsers) {  
+    	try {  
+    		File directory = new File("");
+    		String courseFile = directory.getCanonicalPath();
+    		String userFilePath = courseFile + File.separator + "user" + File.separator + "all-user.xls";
+    		File userFile = new File(userFilePath);
+    		InputStream is = new FileInputStream(userFile.getAbsolutePath()); 
+    		Workbook wb = Workbook.getWorkbook(is);
+    		Sheet sheet = wb.getSheet(0);  
+    		for (int i = 1; i < sheet.getRows(); i++) {  
+    			User user = new User();
+    			for (int j = 0; j < sheet.getColumns(); j++) {  
+    				String cellinfo = sheet.getCell(j, i).getContents();  
+    				switch (j) {
+    				case 0:
+    					user.setId(cellinfo);
+    					break;
+    				case 1:
+    					user.setUserName(cellinfo);
+    					break;
+    				case 2:
+    					user.setPassword(cellinfo);
+    					break;
+    				case 3:
+    					user.setUserGroup(cellinfo);
+    					break;
+    				case 4:
+    					user.setDescription(cellinfo);
+    					break;
+    					
+    				default:
+    					break;
+    				}
+    			}
+    			if (!user.getId().equals("")) {
+    				allUsers.add(user);
+    			}
+    		}  
+    	} catch (FileNotFoundException e) {  
+    		e.printStackTrace();  
+    	} catch (BiffException e) {  
+    		e.printStackTrace();  
+    	} catch (IOException e) {  
+    		e.printStackTrace();  
+    	}  
+    } 
+    
     private ModelAndView createErrResult(String xml, String msg) {
         ModelAndView result = new ModelAndView("config", "xml", xml);
         result.addObject("error", "ERROR: " + msg);
@@ -575,5 +722,6 @@ public class WorkloadConfigurationController extends AbstractController {
 
         return result;
     }
+    
     
 }
