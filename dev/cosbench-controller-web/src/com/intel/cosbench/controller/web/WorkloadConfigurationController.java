@@ -114,10 +114,15 @@ public class WorkloadConfigurationController extends AbstractController {
 						req.getParameterValues("init.workers")[i], 1));
 				work.setDivision("container");
 				String config = "";
+				String cprefix = req.getParameter("init.cprefix");
+				if (cprefix != null && cprefix != "") {
+					config += "cprefix=" + cprefix + ";";
+				}
 				String selector = req.getParameterValues("init.containers")[i];
 				String min = req.getParameterValues("init.containers.min")[i];
 				String max = req.getParameterValues("init.containers.max")[i];
-				config = "containers=" + selector + "(" + min + "," + max + ")";
+				String sexp = parseSelectorToString(selector, min, max);
+				config += "containers=" + sexp;
 				
 				work.setConfig(config);
 				
@@ -147,34 +152,32 @@ public class WorkloadConfigurationController extends AbstractController {
 						req.getParameterValues("prepare.workers")[i], 1));
 				work.setDivision("object");
 				String config = "";
-
+				
+				String cprefix = req.getParameter("prepare.cprefix");
+				if (cprefix != null && cprefix != "") {
+					config += "cprefix=" + cprefix + ";";
+				}
 				// "containers" section in config
 				String cselector = req.getParameterValues("prepare.containers")[i];
 				String cmin = req.getParameterValues("prepare.containers.min")[i];
 				String cmax = req.getParameterValues("prepare.containers.max")[i];
-				config += "containers=" + cselector + "(" + cmin + "," + cmax
-						+ ");";
+				String cexp = parseSelectorToString(cselector, cmin, cmax);
+				config += "containers=" + cexp + ";";
 
 				// "objects" section in config
 				String oselector = req.getParameterValues("prepare.objects")[i];
 				String omin = req.getParameterValues("prepare.objects.min")[i];
 				String omax = req.getParameterValues("prepare.objects.max")[i];
-				config += "objects=" + oselector + "(" + omin + "," + omax
-						+ ");";
+				String oexp = parseSelectorToString(oselector, omin, omax);
+				config += "objects=" + oexp + ";";
 
 				// "sizes" section in config
 				String sselector = getParm(req, "prepare.sizes");
 				String smin = req.getParameterValues("prepare.sizes.min")[i];
 				String smax = req.getParameterValues("prepare.sizes.max")[i];
 				String sunit = req.getParameterValues("prepare.sizes.unit")[i];
-
-				String sexp = "";
-				if ("u".equals(sselector))
-					sexp = sselector + "(" + smin + "," + smax + ")" + sunit;
-				if ("c".equals(sselector))
-					sexp = sselector + "(" + smin + ")" + sunit;
-
-				config += "sizes=" + sexp;
+				String sexp = parseSelectorToString(sselector, smin, smax);
+				config += "sizes=" + sexp + sunit;
 
 				work.setConfig(config);
 
@@ -210,19 +213,23 @@ public class WorkloadConfigurationController extends AbstractController {
 				work.setDivision("object");
 				String config = "";
 
+				String cprefix = req.getParameter("cleanup.cprefix");
+				if (cprefix != null && cprefix != "") {
+					config += "cprefix=" + cprefix + ";";
+				}
 				// "containers" section in config
 				String cselector = req.getParameterValues("cleanup.containers")[i];
 				String cmin = req.getParameterValues("cleanup.containers.min")[i];
 				String cmax = req.getParameterValues("cleanup.containers.max")[i];
-				config += "containers=" + cselector + "(" + cmin + "," + cmax
-						+ ");";
+				String cexp = parseSelectorToString(cselector, cmin, cmax);
+				config += "containers=" + cexp + ";";
 
 				// "objects" section in config
 				String oselector = req.getParameterValues("cleanup.objects")[i];
 				String omin = req.getParameterValues("cleanup.objects.min")[i];
 				String omax = req.getParameterValues("cleanup.objects.max")[i];
-				config += "objects=" + oselector + "(" + omin + "," + omax
-						+ ");";
+				String oexp = parseSelectorToString(oselector, omin, omax);
+				config += "objects=" + oexp;
 
 				work.setConfig(config);
 
@@ -256,12 +263,16 @@ public class WorkloadConfigurationController extends AbstractController {
     	work.setDivision("container");
     	String config = "";
 
+    	String cprefix = req.getParameter("dispose.cprefix");
+		if (cprefix != null && cprefix != "") {
+			config += "cprefix=" + cprefix + ";";
+		}
     	// "containers" section in config
-    	String cselector = req.getParameterValues("dispose.containers")[i];
-    	String cmin = req.getParameterValues("dispose.containers.min")[i];
-    	String cmax = req.getParameterValues("dispose.containers.max")[i];
-    	config += "containers=" + cselector + "(" + cmin + "," + cmax
-    	+ ");";
+    	String dcselector = req.getParameterValues("dispose.containers")[i];
+    	String dcmin = req.getParameterValues("dispose.containers.min")[i];
+    	String dcmax = req.getParameterValues("dispose.containers.max")[i];
+    	String dcexp = parseSelectorToString(dcselector, dcmin, dcmax);
+    	config += "containers=" + dcexp;
 
     	work.setConfig(config);
 
@@ -324,6 +335,13 @@ public class WorkloadConfigurationController extends AbstractController {
 				work.setRuntime(getParmInt(req
 						.getParameterValues("normal.runtime")[i]));
 
+				String config = "";
+		    	String cprefix = req.getParameter("normal.cprefix");
+				if (cprefix != null && cprefix != "") {
+					config += "cprefix=" + cprefix;
+				}
+		    	work.setConfig(config);
+		    	
 				// read operation
 				int rRatio = getParmInt(
 						req.getParameterValues("read.ratio")[i], 0);
@@ -336,15 +354,15 @@ public class WorkloadConfigurationController extends AbstractController {
 					String rcselector = req.getParameterValues("read.containers")[i];
 					String rcmin = req.getParameterValues("read.containers.min")[i];
 					String rcmax = req.getParameterValues("read.containers.max")[i];
-					rconfig += "containers=" + rcselector + "(" + rcmin + ","
-							+ rcmax + ");";
+					String rcexp = parseSelectorToString(rcselector, rcmin, rcmax);
+					rconfig += "containers=" + rcexp + ";";
 	
 					// "objects" section in config
 					String roselector = req.getParameterValues("read.objects")[i];
 					String romin = req.getParameterValues("read.objects.min")[i];
 					String romax = req.getParameterValues("read.objects.max")[i];
-					rconfig += "objects=" + roselector + "(" + romin + "," + romax
-							+ ");";
+					String roexp = parseSelectorToString(roselector, romin, romax);
+					rconfig += "objects=" + roexp;
 					rOp.setConfig(rconfig);
 	
 					work.addOperation(rOp);
@@ -361,30 +379,34 @@ public class WorkloadConfigurationController extends AbstractController {
 					String wcselector = req.getParameterValues("write.containers")[i];
 					String wcmin = req.getParameterValues("write.containers.min")[i];
 					String wcmax = req.getParameterValues("write.containers.max")[i];
-					wconfig += "containers=" + wcselector + "(" + wcmin + ","
-							+ wcmax + ");";
+					String wcexp = parseSelectorToString(wcselector, wcmin, wcmax);
+					wconfig += "containers=" + wcexp + ";";
 	
 					// "objects" section in config
 					String woselector = req.getParameterValues("write.objects")[i];
 					String womin = req.getParameterValues("write.objects.min")[i];
 					String womax = req.getParameterValues("write.objects.max")[i];
-					wconfig += "objects=" + woselector + "(" + womin + "," + womax
-							+ ");";
+					String woexp = parseSelectorToString(woselector, womin, womax);
+					wconfig += "objects=" + woexp + ";";
 	
 					// "sizes" section in config
 					String wsselector = req.getParameterValues("write.sizes")[i];
 					String wsmin = req.getParameterValues("write.sizes.min")[i];
 					String wsmax = req.getParameterValues("write.sizes.max")[i];
 					String wsunit = req.getParameterValues("write.sizes.unit")[i];
-	
-					String wsexp = "";
-					if ("u".equals(wsselector) || "r".equals(wsselector))
-						wsexp = wsselector + "(" + wsmin + "," + wsmax + ")"
-								+ wsunit;
-					if ("c".equals(wsselector))
-						wsexp = wsselector + "(" + wsmin + ")" + wsunit;
-	
-					wconfig += "sizes=" + wsexp;
+					String wsexp = parseSelectorToString(wsselector, wsmin, wsmax);
+					wconfig += "sizes=" + wsexp + wsunit;
+					
+					//""partSize" section in config
+					String wpartSizeName = req.getParameterValues("write.partsizeName")[i];
+					if (wpartSizeName.equals("partSize")) {
+						String wpselector = req.getParameterValues("write.partsize")[i];
+						String wpmin = req.getParameterValues("write.partsize.min")[i];
+						String wpmax = req.getParameterValues("write.partsize.max")[i];
+						String wpunit = req.getParameterValues("write.partsize.unit")[i];
+						String wpexp = parseSelectorToString(wpselector, wpmin, wpmax);		
+						wconfig += ";partSize=" + wpexp + wpunit;
+					}
 	
 					wOp.setConfig(wconfig);
 	
@@ -400,18 +422,14 @@ public class WorkloadConfigurationController extends AbstractController {
 					fwOp.setRatio(fwRatio);
 	
 					// "containers" section in config
-					String fwcselector = req
-							.getParameterValues("filewrite.containers")[i];
-					String fwcmin = req
-							.getParameterValues("filewrite.containers.min")[i];
-					String fwcmax = req
-							.getParameterValues("filewrite.containers.max")[i];
-					fwconfig += "containers=" + fwcselector + "(" + fwcmin + ","
-							+ fwcmax + ");";
+					String fwcselector = req.getParameterValues("filewrite.containers")[i];
+					String fwcmin = req.getParameterValues("filewrite.containers.min")[i];
+					String fwcmax = req.getParameterValues("filewrite.containers.max")[i];
+					String fwcexp = parseSelectorToString(fwcselector, fwcmin, fwcmax);
+					fwconfig += "containers=" + fwcexp + ";";
 	
 					// "objects" section in config
-					String fwoselector = req
-							.getParameterValues("filewrite.fileselection")[i];
+					String fwoselector = req.getParameterValues("filewrite.fileselection")[i];
 					fwconfig += "fileselection=" + fwoselector + ";";
 	
 					// "files" section in config
@@ -436,15 +454,27 @@ public class WorkloadConfigurationController extends AbstractController {
 				String dcselector = req.getParameterValues("delete.containers")[i];
 				String dcmin = req.getParameterValues("delete.containers.min")[i];
 				String dcmax = req.getParameterValues("delete.containers.max")[i];
-				dconfig += "containers=" + dcselector + "(" + dcmin + ","
-						+ dcmax + ");";
+				String dcexp = parseSelectorToString(dcselector, dcmin, dcmax);
+				dconfig += "containers=" + dcexp + ";";
 
 				// "objects" section in config
 				String doselector = req.getParameterValues("delete.objects")[i];
 				String domin = req.getParameterValues("delete.objects.min")[i];
 				String domax = req.getParameterValues("delete.objects.max")[i];
-				dconfig += "objects=" + doselector + "(" + domin + "," + domax
-						+ ");";
+				String doexp = parseSelectorToString(doselector, domin, domax);
+				dconfig += "objects=" + doexp;
+				
+				//""batch" section in config
+				String dbatchName = req.getParameterValues("delete.batchName")[i];
+				System.out.println(dbatchName);
+				if (dbatchName.equals("batch")) {
+					String dbselector = req.getParameterValues("delete.batch")[i];
+					String dbmin = req.getParameterValues("delete.batch.min")[i];
+					String dbmax = req.getParameterValues("delete.batch.max")[i];
+					String wpexp = parseSelectorToString(dbselector, dbmin, dbmax);		
+					dconfig += ";batch=" + wpexp;
+				}
+				
 				dOp.setConfig(dconfig);
 
 				work.addOperation(dOp);
@@ -545,7 +575,6 @@ public class WorkloadConfigurationController extends AbstractController {
 			storageConfig = storageUserConfig + storageUrlConfig;
 		}
 		LOGGER.debug("The storageConfig of the workload {} is {}", name, storageConfig);
-    	System.out.println(storageConfig);
     	workload.setStorage(new Storage(storageType, storageConfig));
 
     	Workflow workflow = new Workflow();
@@ -596,6 +625,15 @@ public class WorkloadConfigurationController extends AbstractController {
     	workload.validate();
     	
     	return workload;
+    }
+    
+    private String parseSelectorToString(String selector, String selectorMin, String selectorMax) {
+    	String sexp = "";
+		if ("u".equals(selector) || "s".equals(selector) || "r".equals(selector))
+			sexp = selector + "(" + selectorMin + "," + selectorMax + ")";
+		if ("c".equals(selector))
+			sexp = selector + "(" + selectorMin + ")";
+		return sexp;
     }
     
     /**

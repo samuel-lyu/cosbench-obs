@@ -79,9 +79,7 @@
 					<div id="workload.as" class="a2">
 							<table class="info-table">
 								<thead>
-								
 									<tr>
-									
 										<th ><strong></strong> </th>
 										<th ><strong>Type</strong></a> </th>
 										<th ><strong>User</strong></a> </th>
@@ -115,7 +113,11 @@
 										</td>
 										<td >
 											<input name="auth.url" type="text" style="width:500px" value="url=http://192.168.10.1:8080/auth/v1.0" 
-							title="different auth system has different parameters: &#10;[swauth]: username=<account:username>;password=<password>;url=<url> &#10;[keystone]: username=<account:username>;password=<password>;url=<url> &#10;[mock]: delay=<time> &#10;[none]: " /> 
+												title="different auth system has different parameters: 
+												&#10;[swauth]: username=<account:username>;password=<password>;url=<url> 
+												&#10;[keystone]: username=<account:username>;password=<password>;url=<url> 
+												&#10;[mock]: delay=<time> 
+												&#10;[none]: " /> 
 										</td>
 									</tr>
 									
@@ -145,53 +147,11 @@
 										</td>
 										<td >
 											<input name="storage.url" id="storage.config" type="text" style="width:500px" value=""
-							title="different storage system has different parameters: &#10 [swift]:  &#10 [ampli]: host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id> &#10; [mock]: delay=<time>;&#10 [none]: " /> 
+												title="different storage system has different parameters: &#10 [swift]:  &#10 [ampli]: host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id> &#10; [mock]: delay=<time>;&#10 [none]: " /> 
 										</td>
 									</tr>
 								</tbody>
 								
-		<!--						
-								<tbody>
-									<tr>
-										<td >Authentication</td>
-										<td >
-											<select name="auth.type" id="auth.type" onChange="changeAuth()">
-											  <option value="swauth" selected="true">swauth/tempauth</option>
-											  <option value="keystone">keystone</option>
-											  <option value="httpauth">basic/digest</option>									
-											  <option value="mock">mock</option>
-											  <option value="none">none</option>
-											</select>
-										</td>
-										<td >
-											<input name="auth.config" id="auth.config" type="text" style="width:500px" value="username=<username>;password=<password>;auth_url=<url>"
-											title="different auth system has different parameters: &#10;[swauth]: username=<account:username>;password=<password>;url=<url> &#10;[keystone]: username=<account:username>;password=<password>;url=<url> &#10;[mock]: delay=<time> &#10;[none]: " /> 
-							
-										</td>
-									</tr>
-									
-									<tr>
-										<td >Storage</td>
-										<td >
-											<select name="storage.type" id="storage.type" onChange="changeStorage()">
-											  <option value="swift" selected="true">Swift</option>
-											  <option value="ampli">Amplistor</option>
-											  <option value="s3">S3</option>
-											  <option value="librados">Ceph LibRados</option>
-											  <option value="cdmi">CDMI</option>
-											  <option value="cdmi_swift">CDMI for Swift</option>
-											  <option value="mock">mock</option>
-											  <option value="none">none</option>
-											</select>
-										</td>
-										<td >
-											<input name="storage.config" id="storage.config" type="text" style="width:500px" value="" 
-											title="different storage system has different parameters: &#10 [swift]:  &#10 [ampli]: host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id> &#10; [mock]: delay=<time>;&#10 [none]: " /> 
-							
-										</td>
-									</tr>
-								</tbody>
-		-->
 							</table>
 					</div>
 				</div>
@@ -213,18 +173,24 @@
 								<table class="info-table">
 									<thead>
 										<th>Worker Count</th>
+										<th>Cprefix</th>
 										<th>Container Selector</th>
 									</thead>
 									
 									<tbody>
 										<tr>
 											<td>
-												<input name="init.workers" type="number" style="width:30px" value="1"/>
+												<input name="init.workers" type="number" style="width:60px" value="1"/>
 											</td>
-
 											<td>
-												<select name="init.containers" hidden="true">
-												  <option value="r" selected="true">Range</option>
+												<input name="init.cprefix" type="text" style="width:120px" value=""/>
+											</td>
+											<td>
+												<select name="init.containers">
+												  <option value="r" selected="true" title="Range">r</option>
+												  <option value="s" title="sequential">s</option>
+												  <option value="u" title="uniform">u</option>
+												  <option value="c" title="constant">c</option>
 												</select>
 												<input name="init.containers.min" type="number" style="width:30px" value="1" /> - <input name="init.containers.max" type="number" style="width:30px" value="32" />
 											</td>
@@ -267,6 +233,7 @@
 								<table class="info-table">
 									<thead>
 										<th>Worker Count</th>
+										<th>Cprefix</th>
 										<th>Container Selector</th>
 										<th>Object Selector</th>
 										<th>Size Selector</th>
@@ -277,29 +244,41 @@
 											<td>
 												<input type="number" name="prepare.workers" style="width:30px" value="1" />
 											</td>
-											
 											<td>
-												<select name="prepare.containers" hidden="true">
-												  <option value="r" selected="true">Range</option>
+												<input name="prepare.cprefix" type="text" style="width:120px" value=""/>
+											</td>
+											<td>
+												<select name="prepare.containers">
+												  <option value="r" selected="true" title="Range">r</option>
+												  <option value="s" title="sequential">s</option>
+												  <option value="u" title="uniform">u</option>
+												  <option value="c" title="constant">c</option>
 												</select>
 												<input type="number" name="prepare.containers.min" style="width:30px" value="1"/> - <input type="number" name="prepare.containers.max" style="width:30px" value="32" />
 											</td>
 											<td>
-												<select name="prepare.objects" hidden="true">
-												  <option value="r" selected="true">Range</option>
+												<select name="prepare.objects">
+												  <option value="r" selected="true" title="Range">r</option>
+												  <option value="s" title="sequential">s</option>
+												  <option value="u" title="uniform">u</option>
+												  <option value="c" title="constant">c</option>
 												</select>
 												<input type="number" name="prepare.objects.min" style="width:30px" value="1"/> - <input type="number" name="prepare.objects.max" style="width:30px" value="50"/>
 											</td>
 											<td>									
-												<select name="prepare.sizes" hidden="true">
-												  <option value="u" selected="true">Uniform</option>
+												<select name="prepare.sizes">
+												  <option value="r" title="Range">r</option>
+												  <option value="s" title="sequential">s</option>
+												  <option value="u" title="uniform">u</option>
+												  <option value="c" selected="true" title="constant">c</option>
 												</select>
 												<input type="number" name="prepare.sizes.min" style="width:30px" value="64"/> - <input type="number" name="prepare.sizes.max" style="width:30px" value="64"/>
 												<select name="prepare.sizes.unit">
 												  <option value="B">Byte</option>
 												  <option value="KB" selected="true">KB</option>
 												  <option value="MB">MB</option>
-												  <option value="GB">GB</option>	</select>
+												  <option value="GB">GB</option>	
+												 </select>
 											</td>
 										</tr>
 									</tbody>							
@@ -336,6 +315,7 @@
 								<table class="info-table">
 									<thead>
 										<th>Worker Count</th>
+										<th>Cprefix</th>
 										<th>Rampup Time (in second)</th>
 										<th>Runtime (in second)</th>
 									</thead>
@@ -344,6 +324,9 @@
 										<tr>
 											<td>
 												<input type="number" name="normal.workers" style="width:30px" value="8" /> 
+											</td>
+											<td>
+												<input name="normal.cprefix" type="text" style="width:120px" value=""/>
 											</td>
 											<td>
 												<input type="number" name="normal.rampup" style="width:30px" value="100" /> 
@@ -365,7 +348,7 @@
 												<th >Container Selector</th>
 												<th >Object Selector</th>
 												<th >Size Selector</th>
-												<th >File selector</th>
+												<th >Other selector</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -373,37 +356,51 @@
 												<td >Read</td>
 												<td ><input type="number" name="read.ratio" style="width:30px" value="80" /> </td>
 												<td >
-													<select name="read.containers" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="read.containers">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" selected="true" title="uniform">u</option>
+													  <option value="c" title="constant">c</option>
 													</select>
 													<input type="number" name="read.containers.min" style="width:30px" value="1" /> - <input type="number" name="read.containers.max" style="width:30px" value="32" /> 
 												</td>
 												<td >
-													<select name="read.objects" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="read.objects">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" selected="true" title="uniform">u</option>
+													  <option value="c" title="constant">c</option>
 													</select>
 													<input type="number" name="read.objects.min" style="width:30px" value="1" /> - <input type="number" name="read.objects.max" style="width:30px" value="50" /> 
 												</td>
-																			
 											</tr>
 											<tr>
 												<td >Write</td>
 												<td ><input type="number" name="write.ratio" style="width:30px" value="20" /> </td>
 												<td >
-													<select name="write.containers" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="write.containers">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" selected="true" title="uniform">u</option>
+													  <option value="c" title="constant">c</option>
 													</select>
 													<input type="number" name="write.containers.min" style="width:30px" value="1" /> - <input type="number" name="write.containers.max" style="width:30px" value="32" /> 
 												</td>
 												<td >
-													<select name="write.objects" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="write.objects">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" selected="true" title="uniform">u</option>
+													  <option value="c" title="constant">c</option>
 													</select>
 													<input type="number" name="write.objects.min" style="width:30px" value="51"/> - <input type="number" name="write.objects.max" style="width:30px" value="100" /> 
 												</td>
 												<td >
-													<select name="write.sizes" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="write.sizes">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" title="uniform">u</option>
+													  <option value="c" selected="true" title="constant">c</option>
 													</select>
 													<input type="number" name="write.sizes.min" style="width:30px" value="64"/> - <input type="number" name="write.sizes.max" style="width:30px" value="64"/>
 													<select name="write.sizes.unit">
@@ -412,26 +409,48 @@
 													  <option value="MB">MB</option>
 													  <option value="GB">GB</option>
 													</select>										
+												</td>
+												<td>
+													<select name="write.partsizeName">
+													  <option value="none" title="none" selected="true">none</option>
+													  <option value="partSize" title="partSize">part</option>
+													</select>
+													<select name="write.partsize">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" title="uniform">u</option>
+													  <option value="c" selected="true" title="constant">c</option>
+													</select>
+													<input type="number" name="write.partsize.min" style="width:30px" value="64"/> - <input type="number" name="write.partsize.max" style="width:30px" value="64"/>
+													<select name="write.partsize.unit">
+													  <option value="B">Byte</option>
+													  <option value="KB" selected="true">KB</option>
+													  <option value="MB">MB</option>
+													  <option value="GB">GB</option>
+													</select>	
 												</td>															
 											</tr>
 											<tr>                                        
 												<td >File-Write</td>
 												<td ><input type="number" name="filewrite.ratio" style="width:30px" value="0" /> </td>
 												<td >
-													<select name="filewrite.containers" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="filewrite.containers">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" selected="true" title="uniform">u</option>
+													  <option value="c" title="constant">c</option>
 													</select>
 													<input type="number" name="filewrite.containers.min" style="width:30px" value="1" /> - <input type="number" name="filewrite.containers.max" style="width:30px" value="32" /> 
 												</td>
 												<td >
 													<select name="filewrite.fileselection" hidden="true">
-													  <option value="s" selected="true">Uniform</option>
+													  <option value="s" selected="true">sequential</option>
 													</select>
 												</td>
 												<td >
 												</td>
 												<td >
-													<input name="filewrite.files" type="text" style="width:100px" value="/tmp/testfiles/" />									
+													<input name="filewrite.files" type="text" style="width:100px" value="/tmp/testfiles" />									
 												</td>															
 											</tr>
 											<tr>
@@ -439,16 +458,37 @@
 												<td >Delete</td>
 												<td ><input type="number" name="delete.ratio" style="width:30px" value="0"/> </td>
 												<td >
-													<select name="delete.containers" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="delete.containers">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" selected="true" title="uniform">u</option>
+													  <option value="c" title="constant">c</option>
 													</select>
 													<input type="number" name="delete.containers.min" style="width:30px" value="1"/> - <input type="number" name="delete.containers.max" style="width:30px" value="100"/> 
 												</td>
 												<td >
-													<select name="delete.objects" hidden="true">
-													  <option value="u" selected="true">Uniform</option>
+													<select name="delete.objects">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" selected="true" title="uniform">u</option>
+													  <option value="c" title="constant">c</option>
 													</select>
 													<input type="number" name="delete.objects.min" style="width:30px" value="1"/> - <input type="number" name="delete.objects.max" style="width:30px" value="100"/> 
+												</td>
+												<td></td>
+												<td>
+													<select name="delete.batchName">
+													  <option value="none" title="none" selected="true">none</option>
+													  <option value="batch" title="batch">batch</option>
+													</select>
+													<select name="delete.batch">
+													  <option value="r" title="Range">r</option>
+													  <option value="s" title="sequential">s</option>
+													  <option value="u" title="uniform">u</option>
+													  <option value="c" selected="true" title="constant">c</option>
+													</select>
+													<input type="number" name="delete.batch.min" style="width:30px" value="16"/> - <input type="number" name="delete.batch.max" style="width:30px" value="16"/> 
+												
 												</td>
 																											
 											</tr>
@@ -457,25 +497,25 @@
 								</p>
 							</div>
 						</div>
-							<div id="normal.delay" class="a2">
-									<input type="checkbox" name="normal.delay.checked" onClick="toggleDiv(document.getElementById('normal.delay.work'));"><strong> Delay: </strong>
-								
-									<div id="normal.delay.work" class="a3" style="display:none">
-											<table class="info-table">
-												<thead>
-													<th>closuredelay</th>
-												</thead>
-								
-												<tbody>
-													<tr>
-														<td>
-															<input name="normal.delay.closuredelay" type="number" style="width:30px" value="60"/>
-														</td>
-													</tr>
-												</tbody>
-											</table>
-									</div>
-							</div>
+						<div id="normal.delay" class="a2">
+								<input type="checkbox" name="normal.delay.checked" onClick="toggleDiv(document.getElementById('normal.delay.work'));"><strong> Delay: </strong>
+							
+								<div id="normal.delay.work" class="a3" style="display:none">
+										<table class="info-table">
+											<thead>
+												<th>closuredelay</th>
+											</thead>
+							
+											<tbody>
+												<tr>
+													<td>
+														<input name="normal.delay.closuredelay" type="number" style="width:30px" value="60"/>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+								</div>
+						</div>
 					</div>
 					<input type="button" id="addnormal" value="Add Main Stage" onClick="addStage(2);" /> 
 					
@@ -490,6 +530,7 @@
 								<table class="info-table">
 									<thead>
 										<th>Worker Count</th>
+										<th>Cprefix</th>
 										<th>Container Selector</th>
 										<th>Object Selector</th>
 									</thead>
@@ -499,17 +540,25 @@
 											<td>
 												<input type="number" name="cleanup.workers" style="width:30px" value="1" />
 											</td>
-											
 											<td>
-												<select name="cleanup.containers" hidden="true">
-												  <option value="r" selected="true" >Range</option>
+												<input name="cleanup.cprefix" type="text" style="width:120px" value=""/>
+											</td>
+											<td>
+												<select name="cleanup.containers">
+												  <option value="r" selected="true" title="Range">r</option>
+												  <option value="s" title="sequential">s</option>
+												  <option value="u" title="uniform">u</option>
+												  <option value="c" title="constant">c</option>
 												</select>
 												<input type="number" name="cleanup.containers.min" style="width:30px" value="1" /> - <input type="number" name="cleanup.containers.max" style="width:30px" value="32" />
 											</td>	
 											
 											<td>
-												<select name="cleanup.objects" hidden="true">
-												  <option value="r" selected="true" >Range</option>
+												<select name="cleanup.objects">
+												  <option value="r" selected="true" title="Range">r</option>
+												  <option value="s" title="sequential">s</option>
+												  <option value="u" title="uniform">u</option>
+												  <option value="c" title="constant">c</option>
 												</select>
 												<input type="number" name="cleanup.objects.min" style="width:30px" value="1"/> - <input type="number" name="cleanup.objects.max" style="width:30px" value="100"/>
 											</td>	
@@ -547,46 +596,53 @@
 					
 						
 						<div id="dispose.work" class="a3">
-								<table class="info-table">
-									<thead>
-										<th>Worker Count</th>
-										<th>Container Selector</th>
-									</thead>
-									
-									<tbody>
-										<tr>
-											<td>
-												<input type="number" name="dispose.workers" style="width:30px" value="1" />
-											</td>									
-											<td>
-												<select name="dispose.containers" hidden="true">
-												  <option value="r" selected="true">Range</option>
-												</select>
-												<input type="number" name="dispose.containers.min" style="width:30px" value="1" /> - <input type="number" name="dispose.containers.max" style="width:30px" value="32"/>
-											</td>
-										</tr>							
-									</tbody>
-								</table>
-						</div>
-							<div id="dispose.delay" class="a2">
-									<input type="checkbox" name="dispose.delay.checked" onClick="toggleDiv(document.getElementById('dispose.delay.work'));"><strong> Delay: </strong>
-									
-									<div id="dispose.delay.work" class="a3" style="display:none">
-											<table class="info-table">
-												<thead>
-													<th>closuredelay</th>
-												</thead>
+							<table class="info-table">
+								<thead>
+									<th>Worker Count</th>
+									<th>Cprefix</th>
+									<th>Container Selector</th>
+								</thead>
 								
-												<tbody>
-													<tr>
-														<td>
-																<input name="dispose.delay.closuredelay" type="number" style="width:30px" value="60"/>
-														</td>
-													</tr>
-												</tbody>
-											</table>
-									</div>
-							</div>
+								<tbody>
+									<tr>
+										<td>
+											<input type="number" name="dispose.workers" style="width:30px" value="1" />
+										</td>
+										<td>
+											<input name="dispose.cprefix" type="text" style="width:120px" value=""/>
+										</td>									
+										<td>
+											<select name="dispose.containers">
+											  <option value="r" selected="true" title="Range">r</option>
+											  <option value="s" title="sequential">s</option>
+											  <option value="u" title="uniform">u</option>
+											  <option value="c" title="constant">c</option>
+											</select>
+											<input type="number" name="dispose.containers.min" style="width:30px" value="1" /> - <input type="number" name="dispose.containers.max" style="width:30px" value="32"/>
+										</td>
+									</tr>							
+								</tbody>
+							</table>
+						</div>
+						<div id="dispose.delay" class="a2">
+								<input type="checkbox" name="dispose.delay.checked" onClick="toggleDiv(document.getElementById('dispose.delay.work'));"><strong> Delay: </strong>
+								
+								<div id="dispose.delay.work" class="a3" style="display:none">
+										<table class="info-table">
+											<thead>
+												<th>closuredelay</th>
+											</thead>
+							
+											<tbody>
+												<tr>
+													<td>
+															<input name="dispose.delay.closuredelay" type="number" style="width:30px" value="60"/>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+								</div>
+						</div>
 					</div>
 					<input type="button" id="adddispose" value="Add Dispose Stage" onClick="addStage(4);" />
 				</div>

@@ -120,10 +120,8 @@ class BalancedScheduler extends AbstractScheduler {
     private Work[] scheduleUserWork(Work work, int[] allocMap) {
         String primitiveAuthConfig = work.getAuth().getConfig();
         LOGGER.debug("The primitive authConfig of the work {} is : {}", work.getName(), primitiveAuthConfig);
-        System.out.println("The primitive authConfig of the work is : " + primitiveAuthConfig);
         String primitiveStorageConfig = work.getStorage().getConfig();
         LOGGER.debug("The primitive storageConfig  of the work {} is : {}", work.getName(), primitiveStorageConfig);
-        System.out.println("The primitive storageConfig of the work is : " + primitiveStorageConfig);
         //count the number of driver that the work will perform on
         int toUseDriverNum = 0;
         for (int i = 0; i < allocMap.length; i++) {

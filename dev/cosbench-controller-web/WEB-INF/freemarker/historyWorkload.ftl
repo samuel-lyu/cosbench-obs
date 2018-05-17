@@ -89,7 +89,7 @@
 					<#if loadArch == false>
 					  <p><a href="historyWorkload.html?loadArch=true">load archived workloads</a></p>
 					  <#elseif loadArch == true>
-					  <p><a href="historyWorkload.html?loadArch=false">unload archived workloads</a></p>
+					  <p><a href="historyWorkload.html?loadArch=false" style="display:none">unload archived workloads</a></p>
 					</#if>
 				</p>
 				

@@ -1,7 +1,8 @@
-<div id="echartsDiv" style="width:100%;height:500px"> </div>
+<div id="echartsDiv" style="width:1000px;height:500px"> </div>
 
 <script type="text/javascript">
-	$("#echartsDiv").css( 'width', window.innerWidth-170+'px');
+	$("#echartsDiv").css( 'width', (window.innerWidth-170)*0.95+'px');
+	$("#echartsDiv").css( 'height', (window.innerHeight-200)*0.8+'px');
 	var timeStampArray = new Array();
 	var readThroughputArray = new Array();
 	var writeThroughputArray = new Array();
@@ -21,24 +22,31 @@
     var myChart = echarts.init(document.getElementById('echartsDiv'));
     var option = {
         title: {
-            text: 'Timeline Status'
+            text: 'Timeline Status',
+            x: 'left'
         },
         tooltip: {
         	trigger: 'axis'
     	},
         legend: {
-        data:['read','write']
+        	data:['read','write'],
+        	x: 'center'
     	},
+    	grid: {
+	        left: 60,
+	    },
     	toolbox: {
 	        feature: {
 	            saveAsImage: {}
 	        }
     	},
         xAxis: {
+        	name: 'TimeStamp',
 	        type: 'category',
 	        data: timeStampArray
 	    },
 	    yAxis: {
+	    	name: 'Throughput(op/s)',
 	        type: 'value'
 	    },
 	    series: [

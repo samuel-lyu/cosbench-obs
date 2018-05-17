@@ -9,7 +9,7 @@ html {
 }
 
 input[type="number"] {
-	width:60px!important;
+	width:50px!important;
 }
 
 input[type="submit"] {
@@ -98,6 +98,13 @@ a:visited {
 
 .graph {
 	padding:0px;
+}
+
+.graph h4 {
+	font-size: 18px;
+	text-align:left;
+	margin-top: 10px;
+    margin-bottom: 10px;
 }
 /* ---------------------------------------
  * Header Styles
