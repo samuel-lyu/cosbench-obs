@@ -35,10 +35,12 @@ import com.intel.cosbench.driver.model.*;
 import com.intel.cosbench.driver.operator.*;
 import com.intel.cosbench.driver.util.AuthCachePool;
 import com.intel.cosbench.driver.util.OperationPicker;
+import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
 import com.intel.cosbench.service.AbortedException;
 
 class WorkAgent extends AbstractAgent implements Session, OperationListener {
+	private static final Logger LOGGER = LogFactory.getSystemLogger();
 
     private long start; /* agent startup time */
     private long begin; /* effective workload startup time */
@@ -172,6 +174,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
 
     private void doWork() {
         doSnapshot();
+        System.out.println(workerContext.isFinished());
         while (!workerContext.isFinished())
             try {
                 performOperation();
@@ -196,6 +199,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
         try{
         	context.getOperator().operate(this);
         }catch(AuthException ae) {
+        	System.out.println("--------"+ae.getMessage()); 
         	reLogin();
         }
     }
@@ -251,10 +255,20 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
     }
 
     private void trySummary() {
+    	LOGGER.debug(" start to determine whether the current task is completed ");
+    	LOGGER.debug("timeout:"+timeout);
+    	LOGGER.debug("curr:"+curr);
+    	LOGGER.debug("totalOps:"+totalOps);
+    	LOGGER.debug("getTotalOps():"+getTotalOps());
+    	LOGGER.debug("totalBytes:"+totalBytes);
+    	LOGGER.debug("getTotalBytes():"+getTotalBytes());
         if ((timeout <= 0 || curr < timeout) // timeout
                 && (totalOps <= 0 || getTotalOps() < totalOps) // operations
                 && (totalBytes <= 0 || getTotalBytes() < totalBytes)) // bytes
+        {
+        	LOGGER.debug("current task is not finished");
             return; // not finished
+        }
         doSummary();
         
         workerContext.setFinished(true);

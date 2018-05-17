@@ -25,7 +25,10 @@ import com.intel.cosbench.api.storage.StorageException;
 import com.intel.cosbench.api.storage.StorageInterruptedException;
 import com.intel.cosbench.bench.*;
 import com.intel.cosbench.config.Config;
+import com.intel.cosbench.driver.util.ContainerPicker;
 import com.intel.cosbench.driver.util.ObjectPicker;
+import com.intel.cosbench.log.LogFactory;
+import com.intel.cosbench.log.Logger;
 import com.intel.cosbench.service.AbortedException;
 
 /**
@@ -35,10 +38,11 @@ import com.intel.cosbench.service.AbortedException;
  * 
  */
 class Deleter extends AbstractOperator {
-
+	private static final Logger LOGGER = LogFactory.getSystemLogger();
     public static final String OP_TYPE = "delete";
 
     private ObjectPicker objPicker = new ObjectPicker();
+    private ContainerPicker contPicker = new ContainerPicker();
     int amount = 0;
 
     public Deleter() {
@@ -48,11 +52,14 @@ class Deleter extends AbstractOperator {
     @Override
     protected void init(String id, int ratio, String division, Config config) {
     	super.init(id, ratio, division, config);
-        objPicker.init(division, config);
+    	contPicker.init(division, config);
+    	if(config.contains("objects")) {
+    		objPicker.init(division, config);
+    	}
         //Get the number of deletes
         if(config.contains("batch")) {
         	amount = pase(config.get("batch"));
-        	System.out.println("amount:"+amount);
+        	LOGGER.debug("The number of objects deleted:"+amount);
         }
     }
 
@@ -63,12 +70,13 @@ class Deleter extends AbstractOperator {
 
     @Override
     protected void operate(int idx, int all, Session session) {
-        String[] path = objPicker.pickObjPath(session.getRandom(), idx, all);
         Sample sample;
         if(amount == 0){
+        	String[] path = objPicker.pickObjPath(session.getRandom(), idx, all);
         	sample = doDelete(path[0], path[1], config, session, this);
         }else {
-        	sample = doDeleteObjects(path[0], config, session, amount, this);
+        	String containerName = contPicker.pickContName(session.getRandom(), idx, all);
+        	sample = doDeleteObjects(containerName, config, session, amount, this);
         }
         session.getListener().onSampleCreated(sample);
         Date now = sample.getTimestamp();

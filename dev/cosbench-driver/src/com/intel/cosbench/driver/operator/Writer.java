@@ -33,6 +33,8 @@ import com.intel.cosbench.driver.generator.RandomInputStream;
 import com.intel.cosbench.driver.generator.XferCountingInputStream;
 import com.intel.cosbench.driver.util.ObjectPicker;
 import com.intel.cosbench.driver.util.SizePicker;
+import com.intel.cosbench.log.LogFactory;
+import com.intel.cosbench.log.Logger;
 import com.intel.cosbench.service.AbortedException;
 
 /**
@@ -42,7 +44,7 @@ import com.intel.cosbench.service.AbortedException;
  * 
  */
 class Writer extends AbstractOperator {
-
+	private static final Logger LOGGER = LogFactory.getSystemLogger();
     public static final String OP_TYPE = "write";
 
     private boolean chunked;
@@ -66,8 +68,7 @@ class Writer extends AbstractOperator {
         hashCheck = config.getBoolean("hashCheck", false);
         if(config.contains("partSize")) {
         	partSize = pase(config.get("partSize"));
-        	System.out.println(config.get("partSize"));
-        	System.out.println(partSize);
+        	LOGGER.debug("Upload a single segment size:"+partSize);
         }
     }
 

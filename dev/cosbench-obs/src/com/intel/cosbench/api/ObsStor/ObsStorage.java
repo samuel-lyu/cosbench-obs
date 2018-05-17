@@ -15,6 +15,7 @@ import org.apache.http.HttpStatus;
 import com.intel.cosbench.api.storage.*;
 import com.intel.cosbench.api.context.*;
 import com.intel.cosbench.config.Config;
+import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
 
 import com.obs.services.HttpProxyConfiguration;
@@ -33,9 +34,11 @@ import com.obs.services.model.ObjectMetadata;
 import com.obs.services.model.ObsObject;
 import com.obs.services.model.PartEtag;
 import com.obs.services.model.S3Object;
+import com.obs.services.model.UploadPartRequest;
 import com.obs.services.model.UploadPartResult;
 
 public class ObsStorage extends NoneStorage{
+	private static final Logger LOGGER = LogFactory.getSystemLogger();
 	private int timeout;
 
 	private String accessKey;
@@ -55,6 +58,9 @@ public class ObsStorage extends NoneStorage{
     	endpoint = config.get(ENDPOINT_KEY, ENDPOINT_DEFAULT);
         accessKey = config.get(AUTH_USERNAME_KEY, AUTH_USERNAME_DEFAULT);
         secretKey = config.get(AUTH_PASSWORD_KEY, AUTH_PASSWORD_DEFAULT);
+        
+//        System.out.println("accessKey:"+accessKey);
+//        System.out.println("secretKey:"+secretKey);
 
         boolean pathStyleAccess = config.getBoolean(PATH_STYLE_ACCESS_KEY, PATH_STYLE_ACCESS_DEFAULT);
         
@@ -77,6 +83,7 @@ public class ObsStorage extends NoneStorage{
         obsConf.setConnectionTimeout(timeout);
         obsConf.setSocketTimeout(timeout);
         obsConf.setEndPoint(endpoint);
+        obsConf.setHttpsOnly(true);
         
 //        clientConf.withUseExpectContinue(false);
 //        clientConf.withSignerOverride("S3SignerType");
@@ -88,6 +95,7 @@ public class ObsStorage extends NoneStorage{
 		
 		//create obs client
 		client = new ObsClient(accessKey, secretKey, obsConf);
+		LOGGER.debug("The client is initialized");
 	}
 
 	@Override
@@ -100,6 +108,7 @@ public class ObsStorage extends NoneStorage{
 	public void dispose() {
 		// TODO Auto-generated method stub
 		super.dispose();
+		LOGGER.debug("The client has been destroyed.");
 		try {
 			client.close();
 		} catch (IOException e) {
@@ -208,79 +217,88 @@ public class ObsStorage extends NoneStorage{
 		super.multiPartUpload(container, object, sizePart, in);
 		
 		try {
-			System.out.println(in.available());
+			LOGGER.debug("the size of the file to upload:"+in.available());
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-		UploadPartResult uploadPart = null; 
-		List<PartEtag> partEtags = new ArrayList<PartEtag>();
-		PartEtag partEtag = new PartEtag();
-		
-		//do init
-		InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest();
-		initRequest.setBucketName(container);
-		initRequest.setObjectKey(object);
-		InitiateMultipartUploadResult imu = client.initiateMultipartUpload(initRequest);
-		System.out.println("bucketName:" + imu.getBucketName()
-        + "\tObjectKey:" + imu.getObjectKey()
-        + "\tUploadId:" + imu.getUploadId());
-		
-		//do upload
-		String uploadId =imu.getUploadId();
-		long uploadedLength = 0;
-		int partNumber = 1;
-		
+		System.out.println(client);
 		try {
-			while(uploadedLength < in.available() ){
-				client.uploadPart(imu.getBucketName(), imu.getObjectKey(), uploadId, partNumber, in);
-			    //The set of segments to be merged.
-			    System.out.println(partNumber + " part is : " + uploadPart.getEtag());
-			    partEtag.seteTag(uploadPart.getEtag());
-			    partEtag.setPartNumber(uploadPart.getPartNumber());
-			    partEtags.add(partEtag);
-			    
-			    partNumber++;
-			    uploadedLength += sizePart;
+			UploadPartResult uploadPartResult = null; 
+			List<PartEtag> partEtags = new ArrayList<PartEtag>();
+			PartEtag partEtag = new PartEtag();
+			//do init
+			InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest();
+			initRequest.setBucketName(container);
+			initRequest.setObjectKey(object);
+			InitiateMultipartUploadResult imu = client.initiateMultipartUpload(initRequest);
+			LOGGER.debug("bucketName:" + imu.getBucketName() + "\tObjectKey:" + imu.getObjectKey()+ "\tUploadId:" + imu.getUploadId());
+			//do upload
+			String uploadId =imu.getUploadId();
+			int partNumber = 1;
+			try {
+				uploadPartResult = client.uploadPart(imu.getBucketName(), imu.getObjectKey(), uploadId, partNumber, in);
+			}catch(Exception e) {
+				e.printStackTrace();
+				System.out.println(client.headBucket(imu.getBucketName()));
 			}
-		} catch (ObsException e) {
-			System.out. println("Error message: " + e.getErrorMessage());
+			
+			
+			LOGGER.debug(partNumber + " part is : " + uploadPartResult.getEtag());
+			partEtag.seteTag(uploadPartResult.getEtag());
+			partEtag.setPartNumber(uploadPartResult.getPartNumber());
+			partEtags.add(partEtag);
+			//complete multiPartUpload
+			CompleteMultipartUploadRequest request = new CompleteMultipartUploadRequest();
+			request.setBucketName(imu.getBucketName());
+			request.setObjectKey(imu.getObjectKey());
+			request.setPartEtag(partEtags);
+			request.setUploadId(imu.getUploadId());
+			try {
+				CompleteMultipartUploadResult result = client.completeMultipartUpload(request);
+			}catch(Exception e) {
+				e.printStackTrace();
+				System.out.println(client.headBucket(imu.getBucketName()));
+			}
+//			System.out.println("ObjectKey: "+result. getObjectKey() + ", Etag: " + result.getEtag());
+		}catch(ObsException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
+			System.out. println("Error message: " + e.getErrorMessage() + ". ResponseCode: " + e.getResponseCode());
+		}catch(Exception e) {
 			e.printStackTrace();
 		}
-	    
-		//complete multiPartUpload
-		CompleteMultipartUploadRequest request = new CompleteMultipartUploadRequest();
-		request.setPartEtag(partEtags);
-		request.setUploadId(imu.getUploadId());
-		CompleteMultipartUploadResult result = client.completeMultipartUpload(request);
-		System.out.println("ObjectKey: "+result. getObjectKey() + ", Etag: " + result.getEtag());
-		
 	}
 
 	@Override
 	public void deleteObjects(String container, Config config, int amount) {
 		super.deleteObjects(container, config, amount);
 		int flag = 0;
-		ObsObject obsObject;
+		ObsObject obsObject = null;
+		ObjectListing result = null;
 		DeleteObjectsRequest requst = new DeleteObjectsRequest();
 		KeyAndVersion[] keyAndVersions = new KeyAndVersion[amount];
 		
 		requst.setBucketName(container);
-		ObjectListing result = client.listObjects(container);
+		try {
+			result = client.listObjects(container);
+		}catch(Exception e) {
+			e.printStackTrace();
+			System.out.println(client.headBucket(container));
+		}
 	    Iterator<ObsObject> itr = result.getObjects().iterator();
 	    //get the sets of objects
 	    while(itr.hasNext() && flag < amount) {
 	    	obsObject = (ObsObject)itr.next();
-	    	System.out.println(obsObject.getObjectKey());
+	    	LOGGER.debug( "Deleted object name:"+obsObject.getObjectKey());
 	    	keyAndVersions[flag] = new KeyAndVersion(obsObject.getObjectKey());
-	    	requst.setKeyAndVersions(keyAndVersions);
 	    	flag++;
 	    }
-	    
-	    client.deleteObjects(requst);
+	    requst.setKeyAndVersions(keyAndVersions);
+	    try {
+	    	client.deleteObjects(requst);
+	    }catch(ObsException e){
+	    	e.printStackTrace();
+	    	System.out. println("Error message: " + e.getErrorMessage()+ ". ResponseCode: " + e.getResponseCode());
+	    }
 	}
 
 
