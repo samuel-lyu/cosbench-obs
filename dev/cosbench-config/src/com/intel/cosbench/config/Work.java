@@ -240,6 +240,17 @@ public class Work implements Iterable<Operation> {
         }
         this.operations = operations;
     }
+    
+    /**
+     * When this method is called, don`t add the configuration of work to operation.
+     * @param operations
+     * @param doNotAddWorkConfigToOperation
+     */
+    public void setOperations(List<Operation> operations, Boolean doNotAddWorkConfigToOperation) {
+    	if (operations == null || operations.isEmpty())
+    		throw new ConfigException("a work must have opertations");
+    	this.operations = operations;
+    }
 
     public void addOperation(Operation op) {
         if (op == null || op.getType().isEmpty())
@@ -248,6 +259,19 @@ public class Work implements Iterable<Operation> {
             operations = new ArrayList<Operation>();
         op.setConfig(ConfigUtils.inherit(op.getConfig(), this.config));
         operations.add(op);
+    }
+    
+    /**
+     * When this method is called, don`t add the configuration of work to operation.
+     * @param operations
+     * @param doNotAddWorkConfigToOperation
+     */
+    public void addOperation(Operation op, Boolean doNotAddWorkConfigToOperation) {
+    	if (op == null || op.getType().isEmpty())
+    		throw new ConfigException("a operation must have type");
+    	if (operations == null)
+    		operations = new ArrayList<Operation>();
+    	operations.add(op);
     }
 
     @Override
@@ -268,11 +292,11 @@ public class Work implements Iterable<Operation> {
         op.setRatio(100);
         Object[] cfgs = null;
         if (config.indexOf("createContainer=") < 0)
-            cfgs = new Object[] { "createContainer=false", config };
+            cfgs = new Object[] { "createContainer=false"};
         else
             cfgs = new Object[] { config };
         op.setConfig(StringUtils.join(cfgs, ';'));
-        setOperations(Collections.singletonList(op));
+        setOperations(Collections.singletonList(op),true);
     }
 
     private void toCleanupWork() {
@@ -288,11 +312,11 @@ public class Work implements Iterable<Operation> {
         op.setRatio(100);
         Object[] cfgs = null;
         if (config.indexOf("deleteContainer=") < 0)
-            cfgs = new Object[] { "deleteContainer=false", config };
+            cfgs = new Object[] { "deleteContainer=false"};
         else
             cfgs = new Object[] { config };
         op.setConfig(StringUtils.join(cfgs, ';'));
-        setOperations(Collections.singletonList(op));
+        setOperations(Collections.singletonList(op),true);
     }
 
     private void toInitWork() {
@@ -306,9 +330,9 @@ public class Work implements Iterable<Operation> {
         Operation op = new Operation();
         op.setType("init");
         op.setRatio(100);
-        Object[] cfgs = new Object[] { "objects=r(0,0);sizes=c(0)B", config };
+        Object[] cfgs = new Object[] { "objects=r(0,0);sizes=c(0)B"};
         op.setConfig(StringUtils.join(cfgs, ';'));
-        setOperations(Collections.singletonList(op));
+        setOperations(Collections.singletonList(op),true);
     }
 
     private void toDisposeWork() {
@@ -322,9 +346,9 @@ public class Work implements Iterable<Operation> {
         Operation op = new Operation();
         op.setType("dispose");
         op.setRatio(100);
-        Object[] cfgs = new Object[] { "objects=r(0,0);sizes=c(0)B", config };
+        Object[] cfgs = new Object[] { "objects=r(0,0);sizes=c(0)B"};
         op.setConfig(StringUtils.join(cfgs, ';'));
-        setOperations(Collections.singletonList(op));
+        setOperations(Collections.singletonList(op),true);
     }
     
 	public void toDelayWork() {
@@ -340,7 +364,7 @@ public class Work implements Iterable<Operation> {
 		op.setType("delay");
 		op.setRatio(100);
 		op.setConfig("");
-		setOperations(Collections.singletonList(op));
+		setOperations(Collections.singletonList(op),true);
 	} 
 	
 	private void setDefaultAfr(int def) {

@@ -31,6 +31,7 @@ import javax.servlet.http.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.ThemeResolver;
 import org.springframework.web.servlet.View;
 
 import com.intel.cosbench.config.*;
@@ -114,7 +115,7 @@ public class WorkloadConfigurationController extends AbstractController {
 						req.getParameterValues("init.workers")[i], 1));
 				work.setDivision("container");
 				String config = "";
-				String cprefix = req.getParameter("init.cprefix");
+				String cprefix = req.getParameterValues("init.cprefix")[i];
 				if (cprefix != null && cprefix != "") {
 					config += "cprefix=" + cprefix + ";";
 				}
@@ -153,7 +154,7 @@ public class WorkloadConfigurationController extends AbstractController {
 				work.setDivision("object");
 				String config = "";
 				
-				String cprefix = req.getParameter("prepare.cprefix");
+				String cprefix = req.getParameterValues("prepare.cprefix")[i];
 				if (cprefix != null && cprefix != "") {
 					config += "cprefix=" + cprefix + ";";
 				}
@@ -213,7 +214,7 @@ public class WorkloadConfigurationController extends AbstractController {
 				work.setDivision("object");
 				String config = "";
 
-				String cprefix = req.getParameter("cleanup.cprefix");
+				String cprefix = req.getParameterValues("cleanup.cprefix")[i];
 				if (cprefix != null && cprefix != "") {
 					config += "cprefix=" + cprefix + ";";
 				}
@@ -263,7 +264,7 @@ public class WorkloadConfigurationController extends AbstractController {
     	work.setDivision("container");
     	String config = "";
 
-    	String cprefix = req.getParameter("dispose.cprefix");
+    	String cprefix = req.getParameterValues("dispose.cprefix")[i];
 		if (cprefix != null && cprefix != "") {
 			config += "cprefix=" + cprefix + ";";
 		}
@@ -320,23 +321,27 @@ public class WorkloadConfigurationController extends AbstractController {
 		String normalChecked[] = req.getParameterValues("normal.checked");
 		if (normalChecked != null) {
 
-			String workStageName = new String("normal");
+			String workStageName = new String("main");
 			ArrayList<Object> workStageList = new ArrayList<Object>();
 			for (int i = 0; i < normalChecked.length; i++) {
 				if (i > 0) {
-					workStageName = new String("normal" + i);
+					workStageName = new String("main" + i);
 				}
 				Stage stage = new Stage(workStageName);
-				Work work = new Work(workStageName, "normal");
-				work.setWorkers(getParmInt(req
-						.getParameterValues("normal.workers")[i]));
-				work.setRampup(getParmInt(req
-						.getParameterValues("normal.rampup")[i]));
-				work.setRuntime(getParmInt(req
-						.getParameterValues("normal.runtime")[i]));
+				Work work = new Work(workStageName, "main");
+				work.setWorkers(getParmInt(req.getParameterValues("normal.workers")[i]));
+				work.setRampup(getParmInt(req.getParameterValues("normal.rampup")[i]));
+				work.setRampdown(getParmInt(req.getParameterValues("normal.rampdown")[i]));
+				work.setRuntime(getParmInt(req.getParameterValues("normal.runtime")[i]));
+				
+				work.setInterval(getParmInt(req.getParameterValues("normal.interval")[i]));
+				work.setTotalOps(getParmInt(req.getParameterValues("normal.totalOps")[i]));
+				work.setTotalBytes(getParmInt(req.getParameterValues("normal.totalBytes")[i]));
+				work.setDivision(req.getParameterValues("normal.division")[i]);
+				work.setAfr(getParmInt(req.getParameterValues("normal.afr")[i]));
 
 				String config = "";
-		    	String cprefix = req.getParameter("normal.cprefix");
+		    	String cprefix = req.getParameterValues("normal.cprefix")[i];
 				if (cprefix != null && cprefix != "") {
 					config += "cprefix=" + cprefix;
 				}
@@ -365,7 +370,7 @@ public class WorkloadConfigurationController extends AbstractController {
 					rconfig += "objects=" + roexp;
 					rOp.setConfig(rconfig);
 	
-					work.addOperation(rOp);
+					work.addOperation(rOp, true);
 				}
 
 				// write operation
@@ -410,7 +415,7 @@ public class WorkloadConfigurationController extends AbstractController {
 	
 					wOp.setConfig(wconfig);
 	
-					work.addOperation(wOp);
+					work.addOperation(wOp, true);
 				}
 
 				// filewrite operation
@@ -466,7 +471,6 @@ public class WorkloadConfigurationController extends AbstractController {
 				
 				//""batch" section in config
 				String dbatchName = req.getParameterValues("delete.batchName")[i];
-				System.out.println(dbatchName);
 				if (dbatchName.equals("batch")) {
 					String dbselector = req.getParameterValues("delete.batch")[i];
 					String dbmin = req.getParameterValues("delete.batch.min")[i];
@@ -564,7 +568,6 @@ public class WorkloadConfigurationController extends AbstractController {
 			authConfig = authUserConfig + authUrlConfig;
 		}
     	LOGGER.debug("The authConfig of the workload {} is {}", name, authConfig);
-    	System.out.println(authConfig);
     	workload.setAuth(new Auth(authType, authConfig));
     	
     	String storageType = getParm(req, "storage.type");
@@ -627,6 +630,14 @@ public class WorkloadConfigurationController extends AbstractController {
     	return workload;
     }
     
+    /**
+     * according to the selectorType to generate different selector configuration
+     * @param selector
+     * 		  selector means selectorType
+     * @param selectorMin
+     * @param selectorMax
+     * @return
+     */
     private String parseSelectorToString(String selector, String selectorMin, String selectorMax) {
     	String sexp = "";
 		if ("u".equals(selector) || "s".equals(selector) || "r".equals(selector))
@@ -640,7 +651,7 @@ public class WorkloadConfigurationController extends AbstractController {
      * 
      * @param req
      * @param type 
-     * type refers to authUser or storageUser
+     * 		type refers to authUser or storageUser
      * @return
      */
     private String parseUserFromPostData(HttpServletRequest req, String type) {

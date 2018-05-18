@@ -183,14 +183,12 @@
 												<input name="init.workers" type="number" style="width:60px" value="1"/>
 											</td>
 											<td>
-												<input name="init.cprefix" type="text" style="width:120px" value=""/>
+												<input name="init.cprefix" type="text" style="width:100px" value=""/>
 											</td>
 											<td>
 												<select name="init.containers">
 												  <option value="r" selected="true" title="Range">r</option>
 												  <option value="s" title="sequential">s</option>
-												  <option value="u" title="uniform">u</option>
-												  <option value="c" title="constant">c</option>
 												</select>
 												<input name="init.containers.min" type="number" style="width:30px" value="1" /> - <input name="init.containers.max" type="number" style="width:30px" value="32" />
 											</td>
@@ -245,14 +243,12 @@
 												<input type="number" name="prepare.workers" style="width:30px" value="1" />
 											</td>
 											<td>
-												<input name="prepare.cprefix" type="text" style="width:120px" value=""/>
+												<input name="prepare.cprefix" type="text" style="width:100px" value=""/>
 											</td>
 											<td>
 												<select name="prepare.containers">
 												  <option value="r" selected="true" title="Range">r</option>
 												  <option value="s" title="sequential">s</option>
-												  <option value="u" title="uniform">u</option>
-												  <option value="c" title="constant">c</option>
 												</select>
 												<input type="number" name="prepare.containers.min" style="width:30px" value="1"/> - <input type="number" name="prepare.containers.max" style="width:30px" value="32" />
 											</td>
@@ -260,15 +256,12 @@
 												<select name="prepare.objects">
 												  <option value="r" selected="true" title="Range">r</option>
 												  <option value="s" title="sequential">s</option>
-												  <option value="u" title="uniform">u</option>
-												  <option value="c" title="constant">c</option>
 												</select>
 												<input type="number" name="prepare.objects.min" style="width:30px" value="1"/> - <input type="number" name="prepare.objects.max" style="width:30px" value="50"/>
 											</td>
 											<td>									
 												<select name="prepare.sizes">
 												  <option value="r" title="Range">r</option>
-												  <option value="s" title="sequential">s</option>
 												  <option value="u" title="uniform">u</option>
 												  <option value="c" selected="true" title="constant">c</option>
 												</select>
@@ -317,6 +310,7 @@
 										<th>Worker Count</th>
 										<th>Cprefix</th>
 										<th>Rampup Time (in second)</th>
+										<th>rampdown Time (in second)</th>
 										<th>Runtime (in second)</th>
 									</thead>
 									
@@ -326,13 +320,50 @@
 												<input type="number" name="normal.workers" style="width:30px" value="8" /> 
 											</td>
 											<td>
-												<input name="normal.cprefix" type="text" style="width:120px" value=""/>
+												<input type="text" name="normal.cprefix" style="width:100px" value=""/>
 											</td>
 											<td>
 												<input type="number" name="normal.rampup" style="width:30px" value="100" /> 
 											</td>
 											<td>
+												<input type="number" name="normal.rampdown" style="width:30px" value="0" /> 
+											</td>
+											<td>
 												<input type="number" name="normal.runtime" style="width:30px" value="300" /> 
+											</td>
+										</tr>
+									
+									</tbody>
+								</table>
+								<table class="info-table">
+									<thead>
+										<th>Interval</th>
+										<th>TotalOps</th>
+										<th>TotalBytes</th>
+										<th>Division</th>
+										<th>Afr</th>
+									</thead>
+									
+									<tbody>
+										<tr>
+											<td>
+												<input type="number" name="normal.interval" style="width:100px!important" value="5"/>
+											</td>
+											<td>
+												<input type="number" name="normal.totalOps" style="width:100px!important" value="0"/>
+											</td>
+											<td>
+												<input type="number" name="normal.totalBytes" style="width:100px!important" value="0" /> 
+											</td>
+											<td>
+												<select name="normal.division">
+													  <option value="none" selected="true" title="none">none</option>
+													  <option value="container" title="container">con</option>
+													  <option value="object" title="object">obj</option>
+													</select>
+											</td>
+											<td>
+												<input type="number" name="normal.afr" style="width:100px!important" value="200000" /> 
 											</td>
 										</tr>
 									
@@ -389,7 +420,6 @@
 												<td >
 													<select name="write.objects">
 													  <option value="r" title="Range">r</option>
-													  <option value="s" title="sequential">s</option>
 													  <option value="u" selected="true" title="uniform">u</option>
 													  <option value="c" title="constant">c</option>
 													</select>
@@ -398,7 +428,6 @@
 												<td >
 													<select name="write.sizes">
 													  <option value="r" title="Range">r</option>
-													  <option value="s" title="sequential">s</option>
 													  <option value="u" title="uniform">u</option>
 													  <option value="c" selected="true" title="constant">c</option>
 													</select>
@@ -541,7 +570,7 @@
 												<input type="number" name="cleanup.workers" style="width:30px" value="1" />
 											</td>
 											<td>
-												<input name="cleanup.cprefix" type="text" style="width:120px" value=""/>
+												<input name="cleanup.cprefix" type="text" style="width:100px" value=""/>
 											</td>
 											<td>
 												<select name="cleanup.containers">
@@ -609,7 +638,7 @@
 											<input type="number" name="dispose.workers" style="width:30px" value="1" />
 										</td>
 										<td>
-											<input name="dispose.cprefix" type="text" style="width:120px" value=""/>
+											<input name="dispose.cprefix" type="text" style="width:100px" value=""/>
 										</td>									
 										<td>
 											<select name="dispose.containers">

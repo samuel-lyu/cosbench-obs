@@ -140,9 +140,10 @@ public class Stage implements Iterable<Work> {
         if (works == null || works.isEmpty())
             throw new ConfigException("stage must have works");
         for(Work work: works) {
-        	work.setConfig(ConfigUtils.inherit(work.getConfig(), this.config));
+        	String workConfig = ConfigUtils.inherit(work.getConfig(), this.config);
+        	work.setConfig(workConfig);
         	 Logger logger = LogFactory.getSystemLogger();
-     		logger.debug("stage config: "+this.config+ "work inherit result: "+  ConfigUtils.inherit(work.getConfig(), this.config));
+     		logger.debug("stage config: "+this.config+ "work inherit result: "+ workConfig);
          
         }
         this.works = works;

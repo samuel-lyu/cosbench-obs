@@ -208,7 +208,7 @@ class BalancedScheduler extends AbstractScheduler {
         newWork.setConfig(work.getConfig());
         newWork.setAuth(new Auth(work.getAuth().getType(), authConfig));
         newWork.setStorage(new Storage(work.getStorage().getType(), storageConfig));
-        newWork.setOperations(work.getOperations());
+        newWork.setOperations(work.getOperations(),true);
     	return newWork;
 	}
     
