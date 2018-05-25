@@ -259,7 +259,7 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
     }
 
     private void trySummary() {
-    	LOGGER.debug(" start to determine whether the current task is completed ");
+    	LOGGER.debug(" starting check if the current task is completed ");
     	LOGGER.debug("timeout:"+timeout);
     	LOGGER.debug("curr:"+curr);
     	LOGGER.debug("totalOps:"+totalOps);

@@ -42,13 +42,15 @@ public class ObsStorage extends NoneStorage{
 	private String accessKey;
 	private String secretKey;
 	private String endpoint;
-
+	private ObsConfiguration obsConf;
+	private String linkWay;
+	private String linkTime;
 	private ObsClient client;
 	
-	List<PartEtag> partEtags;
-	UploadPartResult uploadPartResult; 
-	CompleteMultipartUploadRequest request;
-	InitiateMultipartUploadResult imu;
+	private List<PartEtag> partEtags;
+	private UploadPartResult uploadPartResult; 
+	private CompleteMultipartUploadRequest request;
+	private InitiateMultipartUploadResult imu;
 
 	@Override
 	public void init(Config config, Logger logger) {
@@ -62,8 +64,10 @@ public class ObsStorage extends NoneStorage{
         accessKey = config.get(AUTH_USERNAME_KEY, AUTH_USERNAME_DEFAULT);
         secretKey = config.get(AUTH_PASSWORD_KEY, AUTH_PASSWORD_DEFAULT);
         
-//        System.out.println("accessKey:"+accessKey);
-//        System.out.println("secretKey:"+secretKey);
+        linkWay = config.get(LINK_WAY_KEY, LINK_WAY_DEFAULT);
+        linkTime = config.get(LINK_TIME_KEY, LINK_TIME_DEFAULT);
+        System.out.println(linkWay);
+        System.out.println(linkTime);
 
         boolean pathStyleAccess = config.getBoolean(PATH_STYLE_ACCESS_KEY, PATH_STYLE_ACCESS_DEFAULT);
         
@@ -80,15 +84,18 @@ public class ObsStorage extends NoneStorage{
         logger.debug("using storage config: {}", parms);
         
         //config the basic information
-        ObsConfiguration obsConf = new ObsConfiguration();
+        obsConf = new ObsConfiguration();
         HttpProxyConfiguration httpConf = new HttpProxyConfiguration();
         
         obsConf.setConnectionTimeout(timeout);
         obsConf.setSocketTimeout(timeout);
         obsConf.setEndPoint(endpoint);
-        obsConf.setHttpsOnly(true);
-        
-//        clientConf.withUseExpectContinue(false);
+        if (linkWay.equalsIgnoreCase("https")) {
+			obsConf.setHttpsOnly(true);
+		} else {
+			obsConf.setHttpsOnly(false);
+		}
+		//        clientConf.withUseExpectContinue(false);
 //        clientConf.withSignerOverride("S3SignerType");
 //        clientConf.setProtocol(Protocol.HTTP);
 		if((!proxyHost.equals(""))&&(!proxyPort.equals(""))){
@@ -96,6 +103,9 @@ public class ObsStorage extends NoneStorage{
 			httpConf.setProxyPort(Integer.parseInt(proxyPort));
 		}
 		
+		if (linkTime.equalsIgnoreCase("short")) {
+			return;
+		}
 		//create obs client
 		client = new ObsClient(accessKey, secretKey, obsConf);
 		LOGGER.debug("The client is initialized");
@@ -110,43 +120,88 @@ public class ObsStorage extends NoneStorage{
 	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
+		if (client == null) {
+			return;
+		}
 		super.dispose();
-		LOGGER.debug("The client has been destroyed.");
 		try {
 			client.close();
+			LOGGER.debug("The client has been destroyed.");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			LOGGER.debug("Failed to destroy the client.");
 			e.printStackTrace();
 		}
 	}
 
 	@Override
     public InputStream getObject(String container, String object, Config config) {
-        super.getObject(container, object, config);
+		super.getObject(container, object, config);
         InputStream stream;
-        try {
-        	
-            S3Object s3Obj = client.getObject(container, object);
-            stream = s3Obj.getObjectContent();
-            
-        } catch (Exception e) {
-            throw new StorageException(e);
-        }
+        if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				stream = getObject(container, object, config, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			stream = getObject(container, object, config, this.client);
+		}
         return stream;
     }
+	
+	public InputStream getObject(String container, String object, Config config, ObsClient client) {
+		InputStream stream;
+		try {
+			
+			S3Object s3Obj = client.getObject(container, object);
+			stream = s3Obj.getObjectContent();
+			
+		} catch (Exception e) {
+			throw new StorageException(e);
+		}
+		return stream;
+	}
 
 	@Override
 	public void createContainer(String container, Config config) {
 		// TODO Auto-generated method stub
 		super.createContainer(container, config);
+		if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				createContainer(container, config, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			createContainer(container, config, this.client);
+		}
+	}
+	
+	public void createContainer(String container, Config config, ObsClient client) {
 		try {
-        	if(!client.headBucket(container)) {
-	        	
-	            client.createBucket(container);
-        	}
-        } catch (Exception e) {
-            throw new StorageException(e);
-        }
+			if(!client.headBucket(container)) {
+				
+				client.createBucket(container);
+			}
+		} catch (Exception e) {
+			throw new StorageException(e);
+		}
 	}
 
 	@Override
@@ -154,62 +209,153 @@ public class ObsStorage extends NoneStorage{
             long length, Config config) {
 		// TODO Auto-generated method stub
 		super.createObject(container, object, data, length, config);
+		if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				createObject(container, object, data, length, config, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			createObject(container, object, data, length, config, this.client);
+		}
+	}
+	
+	public void createObject(String container, String object, InputStream data,
+			long length, Config config, ObsClient client) {
+		// TODO Auto-generated method stub
+		super.createObject(container, object, data, length, config);
 		try {
-    		ObjectMetadata metadata = new ObjectMetadata();
-    		metadata.setContentLength(length);
-    		metadata.setContentType("application/octet-stream");
-    		
-        	client.putObject(container, object, data, metadata);
-        } catch (Exception e) {
-            throw new StorageException(e);
-        }
+			ObjectMetadata metadata = new ObjectMetadata();
+			metadata.setContentLength(length);
+			metadata.setContentType("application/octet-stream");
+			
+			client.putObject(container, object, data, metadata);
+		} catch (Exception e) {
+			throw new StorageException(e);
+		}
 	}
 
 	@Override
 	public void deleteContainer(String container, Config config) {
 		// TODO Auto-generated method stub
 		super.deleteContainer(container, config);
+		if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				deleteContainer(container, config, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			deleteContainer(container, config, this.client);
+		}
+	}
+	
+	public void deleteContainer(String container, Config config, ObsClient client) {
+		// TODO Auto-generated method stub
+		super.deleteContainer(container, config);
 		try {
-        	if(client.headBucket(container)) {
-        		client.deleteBucket(container);
-        	}
-        } catch(ObsException awse) {
-        	if(Integer.parseInt(awse.getErrorCode()) != HttpStatus.SC_NOT_FOUND) {
-        		throw new StorageException(awse);
-        	}
-        } catch (Exception e) {
-            throw new StorageException(e);
-        }
+			if(client.headBucket(container)) {
+				client.deleteBucket(container);
+			}
+		} catch(ObsException awse) {
+			if(Integer.parseInt(awse.getErrorCode()) != HttpStatus.SC_NOT_FOUND) {
+				throw new StorageException(awse);
+			}
+		} catch (Exception e) {
+			throw new StorageException(e);
+		}
 	}
 
 	@Override
 	public void deleteObject(String container, String object, Config config) {
 		// TODO Auto-generated method stub
 		super.deleteObject(container, object, config);
+		if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				deleteObject(container, object, config, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			deleteObject(container, object, config, this.client);
+		}
+	}
+	
+	public void deleteObject(String container, String object, Config config, ObsClient client) {
+		// TODO Auto-generated method stub
+		super.deleteObject(container, object, config);
 		try {
-            client.deleteObject(container, object);
-        } catch(ObsException awse) {
-        	if(Integer.parseInt(awse.getErrorCode()) != HttpStatus.SC_NOT_FOUND) {
-        		throw new StorageException(awse);
-        	}
-        } catch (Exception e) {
-            throw new StorageException(e);
-        }
+			client.deleteObject(container, object);
+		} catch(ObsException awse) {
+			if(Integer.parseInt(awse.getErrorCode()) != HttpStatus.SC_NOT_FOUND) {
+				throw new StorageException(awse);
+			}
+		} catch (Exception e) {
+			throw new StorageException(e);
+		}
 	}
 
 	@Override
 	public InputStream getObjectByRange(String container, String object, Config config, long startRange, long endRange) {
 		// TODO Auto-generated method stub
-		
 		System.out.println(startRange+"-"+endRange);
-		
 		super.getObjectByRange(container, object, config, startRange, endRange);     
 
+		InputStream objectData;
+		if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				objectData = getObjectByRange(container, object, config, startRange, endRange, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			objectData = getObjectByRange(container, object, config, startRange, endRange, this.client);
+		}
+		return objectData;
+	}
+	
+	public InputStream getObjectByRange(String container, String object, Config config, long startRange, long endRange, ObsClient client) {
+		// TODO Auto-generated method stub
+		System.out.println(startRange+"-"+endRange);
+		super.getObjectByRange(container, object, config, startRange, endRange);     
+		
 		GetObjectRequest rangeObjectRequest = new GetObjectRequest(container, object);
 		rangeObjectRequest.	setRangeStart(startRange);
 		rangeObjectRequest.setRangeEnd(endRange);
 		S3Object objectPortion = client.getObject(rangeObjectRequest);
-
+		
 		InputStream objectData = objectPortion.getObjectContent();
 		// Process the objectData stream.
 		return objectData;
@@ -218,6 +364,29 @@ public class ObsStorage extends NoneStorage{
 	@Override
 	public long multiPartUpload(String container, String object, long sizePart, InputStream in, boolean isFinish, int partNum) {
 		super.multiPartUpload(container, object, sizePart, in ,isFinish, partNum);
+		long  resTime;
+		if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				resTime = multiPartUpload(container, object, sizePart, in ,isFinish, partNum, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			resTime = multiPartUpload(container, object, sizePart, in ,isFinish, partNum, this.client);
+		}
+		return resTime;
+	}
+	
+	public long multiPartUpload(String container, String object, long sizePart, InputStream in, boolean isFinish, int partNum, ObsClient client) {
+		super.multiPartUpload(container, object, sizePart, in ,isFinish, partNum);
 		long end;
 		if (partNum == 1) {
 			// do init
@@ -225,7 +394,7 @@ public class ObsStorage extends NoneStorage{
 			request = new CompleteMultipartUploadRequest();
 			imu = null;
 			InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest();
-
+			
 			initRequest.setBucketName(container);
 			initRequest.setObjectKey(object);
 			imu = client.initiateMultipartUpload(initRequest);
@@ -246,7 +415,7 @@ public class ObsStorage extends NoneStorage{
 			partEtag.seteTag(uploadPartResult.getEtag());
 			partEtag.setPartNumber(uploadPartResult.getPartNumber());
 			partEtags.add(partEtag);
-
+			
 			// complete multiPartUpload
 			if (isFinish) 
 			{
@@ -261,14 +430,32 @@ public class ObsStorage extends NoneStorage{
 			System.out.println(client.headBucket(imu.getBucketName()));
 			return -1;
 		} 
-//		finally {
-//			closeClient();
-//		}
 		return (end - start) / 1000000;
 	}
 
 	@Override
 	public void deleteObjects(String container, Config config, int amount) {
+		super.deleteObjects(container, config, amount);
+		if (linkTime.equalsIgnoreCase("short")) {
+			ObsClient client = new ObsClient(accessKey, secretKey, obsConf);
+			LOGGER.debug("The client is initialized by method self");
+			try {
+				deleteObjects(container, config, amount, client);
+			} finally {
+				try {
+					client.close();
+					LOGGER.debug("The client created by method self has been destroyed.");
+				} catch (IOException e) {
+					LOGGER.debug("Failed to destroy the client created by method self.");
+					e.printStackTrace();
+				}
+			}
+		} else {
+			deleteObjects(container, config, amount, this.client);
+		}
+	}
+	
+	public void deleteObjects(String container, Config config, int amount, ObsClient client) {
 		super.deleteObjects(container, config, amount);
 		int flag = 0;
 		ObsObject obsObject = null;
@@ -283,43 +470,21 @@ public class ObsStorage extends NoneStorage{
 			e.printStackTrace();
 			System.out.println(client.headBucket(container));
 		}
-	    Iterator<ObsObject> itr = result.getObjects().iterator();
-	    //get the sets of objects
-	    while(itr.hasNext() && flag < amount) {
-	    	obsObject = (ObsObject)itr.next();
-	    	LOGGER.debug( "Deleted object name:"+obsObject.getObjectKey());
-	    	keyAndVersions[flag] = new KeyAndVersion(obsObject.getObjectKey());
-	    	flag++;
-	    }
-	    requst.setKeyAndVersions(keyAndVersions);
-	    try {
-	    	client.deleteObjects(requst);
-	    }catch(ObsException e){
-	    	e.printStackTrace();
-	    	System.out. println("Error message: " + e.getErrorMessage()+ ". ResponseCode: " + e.getResponseCode());
-	    }
-	    finally
-	    {
-	        closeClient();
-	    }
-	}
-
-	/**
-	 * release client
-	 */
-	private void closeClient() {
-		try
-		{
-		 if(client != null)
-		 {
-		  client.close();
-		 }
+		Iterator<ObsObject> itr = result.getObjects().iterator();
+		//get the sets of objects
+		while(itr.hasNext() && flag < amount) {
+			obsObject = (ObsObject)itr.next();
+			LOGGER.debug( "Deleted object name:"+obsObject.getObjectKey());
+			keyAndVersions[flag] = new KeyAndVersion(obsObject.getObjectKey());
+			flag++;
 		}
-		catch (IOException e)
-		{
+		requst.setKeyAndVersions(keyAndVersions);
+		try {
+			client.deleteObjects(requst);
+		}catch(ObsException e){
 			e.printStackTrace();
+			System.out. println("Error message: " + e.getErrorMessage()+ ". ResponseCode: " + e.getResponseCode());
 		}
 	}
 
-	
 }

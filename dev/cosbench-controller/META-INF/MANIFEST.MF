@@ -15,6 +15,7 @@ Import-Package: com.intel.cosbench.bench,
  com.intel.cosbench.protocol,
  com.intel.cosbench.service,
  com.intel.cosbench.utils,
+ com.intel.cosbench.controller.entity,
  org.apache.commons.lang;version="[2.5.0,3.0.0)",
  org.apache.commons.lang.math;version="[2.5.0,3.0.0)",
  org.apache.http;version="[4.1.0,5.0.0)",
@@ -25,3 +26,5 @@ Import-Package: com.intel.cosbench.bench,
  org.apache.http.util;version="[4.1.0,5.0.0)",
  org.codehaus.jackson;version="[1.4.2,2.0.0)",
  org.codehaus.jackson.map;version="[1.4.2,2.0.0)"
+Bundle-ClassPath: jxl.jar,
+ .

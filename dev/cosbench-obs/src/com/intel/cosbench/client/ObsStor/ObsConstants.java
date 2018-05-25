@@ -24,6 +24,16 @@ public interface ObsConstants {
     String AUTH_PASSWORD_DEFAULT = "";
     
     // --------------------------------------------------------------------------
+    // LINK_WAY ADN LINKTIME
+    // --------------------------------------------------------------------------
+    
+    String LINK_WAY_KEY = "linkWay";
+    String LINK_WAY_DEFAULT = "https";
+    
+    String LINK_TIME_KEY = "linkTime";
+    String LINK_TIME_DEFAULT = "long";
+    
+    // --------------------------------------------------------------------------
     // CLIENT CONFIGURATION
     // --------------------------------------------------------------------------
     String PROXY_HOST_KEY = "proxyhost";

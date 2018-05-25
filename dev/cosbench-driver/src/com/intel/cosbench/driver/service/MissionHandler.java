@@ -183,16 +183,22 @@ class MissionHandler {
      * @return
      */
     private Config[] parseConfigsAssumedMultiuser(String configStr) {
-		String[] strings = configStr.split(";");
-		int totalUser = strings.length / 2;
-		if (totalUser <= 1) {
+    	if (StringUtils.isEmpty(configStr)) {
+			return new Config[]{KVConfigParser.parse("")};
+		}
+		int totalUser = 0;
+		if (!configStr.contains("******")) {
 			Config[] configs = {KVConfigParser.parse(configStr)};
 			return configs;
 		} else {
+			String[] cfgArray = configStr.split("\\*\\*\\*\\*\\*\\*");
+			String userStr = cfgArray[0];
+			String otherCfgStr = cfgArray[1];
+			String[] userArray = userStr.split(";"); 
+			totalUser = userArray.length / 2;
 			Config[] configs = new Config[totalUser];
-			String url = strings[strings.length - 1];
-			for (int i = 0; i < configs.length; i++) {
-				String oneUserConfigStr = strings[i*2] + ";" + strings[i*2+1] + ";" + url;
+			for (int i = 0; i < totalUser; i++) {
+				String oneUserConfigStr = userArray[i*2] + ";" + userArray[i*2+1] + ";" + otherCfgStr;
 				configs[i] = KVConfigParser.parse(oneUserConfigStr);
 			}
 			return configs;

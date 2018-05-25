@@ -17,6 +17,11 @@ limitations under the License.
 
 package com.intel.cosbench.controller.schedule;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
@@ -24,9 +29,14 @@ import org.apache.commons.lang.StringUtils;
 import com.intel.cosbench.config.Auth;
 import com.intel.cosbench.config.Storage;
 import com.intel.cosbench.config.Work;
+import com.intel.cosbench.controller.entity.User;
 import com.intel.cosbench.controller.model.*;
 import com.intel.cosbench.log.LogFactory;
 import com.intel.cosbench.log.Logger;
+
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
 
 /**
  * This class encapsulates one balanced scheduler, which tries best to evenly
@@ -122,6 +132,8 @@ class BalancedScheduler extends AbstractScheduler {
         LOGGER.debug("The primitive authConfig of the work {} is : {}", work.getName(), primitiveAuthConfig);
         String primitiveStorageConfig = work.getStorage().getConfig();
         LOGGER.debug("The primitive storageConfig  of the work {} is : {}", work.getName(), primitiveStorageConfig);
+        String[] authCfgArray = seperateUserFromCfg(primitiveAuthConfig);
+        String[] storageCfgArray = seperateUserFromCfg(primitiveStorageConfig);
         //count the number of driver that the work will perform on
         int toUseDriverNum = 0;
         for (int i = 0; i < allocMap.length; i++) {
@@ -129,10 +141,10 @@ class BalancedScheduler extends AbstractScheduler {
 				toUseDriverNum = i+1;
 			}
 		}
-        
-        String[] authConfigArray = balanceUserConfig(toUseDriverNum, primitiveAuthConfig);
-        String[] storageConfigArray = balanceUserConfig(toUseDriverNum, primitiveStorageConfig);
-        
+        /*balance users*/
+        String[] authConfigArray = balanceUserConfig(toUseDriverNum, authCfgArray);
+        String[] storageConfigArray = balanceUserConfig(toUseDriverNum, storageCfgArray);
+        /*new work for every driver*/
         Work[] balanceUserWork = new Work[toUseDriverNum];
         for (int i = 0; i < balanceUserWork.length; i++) {
 			balanceUserWork[i] = workConfigClone(work, authConfigArray[i], storageConfigArray[i]);
@@ -143,44 +155,67 @@ class BalancedScheduler extends AbstractScheduler {
     /**
      * 
      * @param toUseDriverNum
-     * 		TousDeCurvNUM determines the number of parts that the user will be divided into.
-     * @param primitiveConfig
-     * 		primitiveConfig contains all users
+     * 		toUseDriverNum determines the number of parts that the users will be divided into.
+     * @param primitiveCfgArray
+     * 		primitiveCfgArray contains all users and other configuration;
+     * 		primitiveCfgArray[0] contains zero or more than one users
+     * 		primitiveCfgArray[1] contains other configuration
      * @return
      */
-    private String[] balanceUserConfig(int toUseDriverNum, String primitiveConfig) {
-    	String primitiveConfigStr = StringUtils.isEmpty(primitiveConfig) ? "" : primitiveConfig;
-    	String[] primitiveConfigArray = primitiveConfigStr.split(";");
-        String[] configArray = new String[toUseDriverNum];
+    private String[] balanceUserConfig(int toUseDriverNum, String[] primitiveCfgArray) {
+    	String primitiveUserStr = primitiveCfgArray[0];
+    	String[] configArray = new String[toUseDriverNum];
+    	/*if there is no more than one users ,it is not nessesary to balance user,just use the primitive configuration*/
+    	if (StringUtils.isEmpty(primitiveUserStr)) {
+			for (int i = 0; i < configArray.length; i++) {
+				configArray[i] = primitiveCfgArray[1];
+			}
+			return configArray;
+		}
+    	
+    	/*balance more than one users to drivers*/
+    	String[] primitiveUserArray = primitiveUserStr.split(";");
         for (int i = 0; i < configArray.length; i++) configArray[i] = "";
-        if (!StringUtils.isEmpty(primitiveConfigStr)) {
-        	int totalUserNum = primitiveConfigArray.length / 2;
+        if (!StringUtils.isEmpty(primitiveUserStr)) {
+        	int totalUserNum = primitiveUserArray.length / 2;
         	int base = totalUserNum / toUseDriverNum;
         	int extra = totalUserNum % toUseDriverNum;
         	
         	for (int i = 0; i < toUseDriverNum; i++) {
         		for (int j = 0; j < base; j++) {
-        			configArray[i] += primitiveConfigArray[(i * base + j) * 2] + ";";
-        			configArray[i] += primitiveConfigArray[(i * base + j) * 2 + 1] + ";";
+        			configArray[i] += primitiveUserArray[(i * base + j) * 2] + ";" 
+        		                   + primitiveUserArray[(i * base + j) * 2 + 1] + ";";
 				}
         	}
             for (int i = 0; i < extra; i++) {
-            	configArray[i] += primitiveConfigArray[(base * toUseDriverNum + i) * 2] + ";";
-            	configArray[i] += primitiveConfigArray[(base * toUseDriverNum + i) * 2 + 1] + ";";
+            	configArray[i] += primitiveUserArray[(base * toUseDriverNum + i) * 2] + ";" 
+            	               + primitiveUserArray[(base * toUseDriverNum + i) * 2 + 1] + ";";
             }
             if (base == 0 && totalUserNum > 0) {
 				for (int i = extra; i < toUseDriverNum; i++) {
 					Random random = new Random();
 					int reed = random.nextInt(totalUserNum);
-					configArray[i] = primitiveConfigArray[(reed) * 2] + ";";
-					configArray[i] = primitiveConfigArray[(reed) * 2 + 1] + ";";
+					configArray[i] = primitiveUserArray[(reed) * 2] + ";";
+					configArray[i] = primitiveUserArray[(reed) * 2 + 1] + ";";
 				}
 			}
+            /*If the driver is assigned more than one user,user six asterisk to mark the config*/
             for (int i = 0; i < toUseDriverNum; i++) {
-        		configArray[i] += primitiveConfigArray[primitiveConfigArray.length - 1];
+            	if (base > 1) {
+            		configArray[i] = removeTheEndingSemicolon(configArray[i]);
+            		configArray[i] += "******" + primitiveCfgArray[1];
+				} else if (base == 1) {
+	            	if (i < extra) {
+	            		configArray[i] = removeTheEndingSemicolon(configArray[i]);
+	            		configArray[i] += "******" + primitiveCfgArray[1];
+					} else {
+						configArray[i] += primitiveCfgArray[1];
+					}
+				} else {
+					configArray[i] += primitiveCfgArray[1];
+				}
         	}
 		}
-        
         return configArray;
 	}
     
@@ -211,6 +246,155 @@ class BalancedScheduler extends AbstractScheduler {
         newWork.setOperations(work.getOperations(),true);
     	return newWork;
 	}
+    
+    /**
+     * Separating the user configuration from the other configuration in the configuration
+     * @param originalCfg
+     * @return
+     */
+    private String[] seperateUserFromCfg(String originalCfg) {
+    	if (originalCfg == null) {
+    		originalCfg = "";
+		}
+    	if (originalCfg.contains("userGroup:") || originalCfg.contains("user:")) {
+			String[] user_cfg_seperation = divideUserFromCfg(originalCfg);
+    		return user_cfg_seperation;
+		} else {
+			return new String[]{"",originalCfg};
+		}
+    }
+    
+    /**
+     * Separating the user configuration from the other configuration in the configuration
+     * @param originalCfg
+     * @return
+     */
+    private String[] divideUserFromCfg(String originalCfg) {
+    	List<User> allUsers = new ArrayList<User>();
+    	readUserFromExcel(allUsers);
+		String[] cfgs = originalCfg.split(";");
+		int totalUser = 0;
+		String userCfg = "";
+		String otherCfg = "";
+		for (int i = 0; i < cfgs.length; i++) {
+			if (cfgs[i].contains("userGroup:") || cfgs[i].contains("user:")) {
+				String[] userArray = cfgs[i].split(":");
+				if (userArray[0].equalsIgnoreCase("userGroup")) {
+					String groupName = userArray[1];
+					userCfg += obtainConfigByUserGroupName(allUsers, groupName) + ";";
+				} else if (userArray[0].equals("user")) {
+					String userName = userArray[1];
+					userCfg += obtainConfigByUserName(allUsers, userName) + ";";
+		    		totalUser++;
+				}
+			} else {
+				otherCfg += cfgs[i] + ";";
+			}
+		}
+		
+		/*If there is only one user, there is no need to redistribute.*/
+		userCfg = removeTheEndingSemicolon(userCfg);
+		otherCfg = removeTheEndingSemicolon(otherCfg);
+		totalUser = userCfg.split(";").length / 2;
+		if (totalUser < 2) {
+			otherCfg = userCfg + ";" + otherCfg;
+			return new String[]{"",otherCfg};
+		} else {
+			return new String[]{userCfg, otherCfg};
+		}
+	}
+    
+    private String removeTheEndingSemicolon(String originalStr) {
+    	if (!StringUtils.isEmpty(originalStr) && originalStr.endsWith(";")) {
+			return originalStr.substring(0, originalStr.length()-1);
+		}
+		return originalStr;
+	}
+    
+    /**
+     * obtain all user whose group is @param groupName
+     * @param allUsers
+     * @param groupName
+     * @return
+     */
+    private String obtainConfigByUserGroupName(List<User> allUsers, String groupName) {
+    	String userConfig = "";
+		for (User user : allUsers) {
+			if (user.getUserGroup().equals(groupName)) {
+				userConfig = userConfig + user.getUserName() + ";" + user.getPassword() + ";";
+			}
+		}
+    	return removeTheEndingSemicolon(userConfig);
+	}
+    
+    /**
+     * obtain user whose userName is @param userName
+     * @param allUsers
+     * @param userName
+     * @return
+     */
+    private String obtainConfigByUserName(List<User> allUsers, String userName) {
+    	String userConfig = "";
+		for (User user : allUsers) {
+			if (user.getUserName().equals(userName)) {
+				userConfig = userConfig + user.getUserName() + ";" + user.getPassword();
+				break;
+			}
+		}
+    	return userConfig;
+    }
+    
+    /**
+     * read all users from local excel file
+     * @param allUsers
+     * allUsers is a collection to storage all users read from excel
+     */
+    public void readUserFromExcel(List<User> allUsers) {  
+    	try {  
+    		File directory = new File("");
+    		String courseFile = directory.getCanonicalPath();
+    		String userFilePath = courseFile + File.separator + "user" + File.separator + "all-user.xls";
+    		File userFile = new File(userFilePath);
+    		InputStream is = new FileInputStream(userFile.getAbsolutePath()); 
+    		Workbook wb = Workbook.getWorkbook(is);
+    		Sheet sheet = wb.getSheet(0);  
+    		for (int i = 1; i < sheet.getRows(); i++) {  
+    			User user = new User();
+    			for (int j = 0; j < sheet.getColumns(); j++) {  
+    				String cellinfo = sheet.getCell(j, i).getContents();  
+    				switch (j) {
+    				case 0:
+    					user.setId(cellinfo);
+    					break;
+    				case 1:
+    					user.setUserName(cellinfo);
+    					break;
+    				case 2:
+    					user.setPassword(cellinfo);
+    					break;
+    				case 3:
+    					user.setUserGroup(cellinfo);
+    					break;
+    				case 4:
+    					user.setDescription(cellinfo);
+    					break;
+    					
+    				default:
+    					break;
+    				}
+    			}
+    			if (!user.getId().equals("")) {
+    				allUsers.add(user);
+    			}
+    		}  
+    	} catch (FileNotFoundException e) {  
+    		e.printStackTrace();  
+    	} catch (BiffException e) {  
+    		e.printStackTrace();  
+    	} catch (IOException e) {  
+    		e.printStackTrace();  
+    	}  
+    } 
     
     private DriverContext fetchDriver(String name) {
         if (StringUtils.isEmpty(name))

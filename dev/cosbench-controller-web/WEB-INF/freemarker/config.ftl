@@ -84,27 +84,28 @@
 										<th ><strong>Type</strong></a> </th>
 										<th ><strong>User</strong></a> </th>
 										<th ></strong>URL</strong></a> </th>
+										<th title="Select the HTTP and HTTPS links between driver and storage."><strong>LinkWay</strong></a> </th>
+										<th title="Select V2 or V4 authentication methods of obsStorage" style="display:none"><strong>V2/V4</strong></a> </th>
+										<th title="Choose the connection mode between driver and storage, including long connection and short connection."><strong>LinkTime</strong></a> </th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr>
 										<td >Authentication</td>
 										<td >
-											<select name="auth.type">
-											  <option value="swauth" selected="true">swauth</option>
+											<select name="auth.type" id="auth.type" onChange="changeAuth()" style="width:88px">
+											  <option value="swauth">swauth</option>
 											  <option value="keystone">keystone</option>
+											  <option value="httpauth">httpauth</option>
 											  <option value="mock">mock</option>
-											  <option value="none">none</option>
+											  <option value="none" selected="true">none</option>
 											</select>
 										</td>
 										<td >
-											<select name="auth.user">
+											<select name="auth.user" id="auth.user">
+												<option value="none" selected="true">none</option>
 												<#list userGroupList as userGroup>
-													<#if userGroup_index = 0>
-														<option value=userGroup:${userGroup} selected="true">userGroup:${userGroup}</option>
-													<#else>
-														<option value=userGroup:${userGroup}>userGroup:${userGroup}</option>
-													</#if>
+													<option value=userGroup:${userGroup}>userGroup:${userGroup}</option>
 												</#list>
 												<#list userList as user>
 													<option value=user:${user}>user:${user}</option>
@@ -112,7 +113,7 @@
 											</select>
 										</td>
 										<td >
-											<input name="auth.url" type="text" style="width:500px" value="url=http://192.168.10.1:8080/auth/v1.0" 
+											<input name="auth.url" id="auth.url" type="text" style="width:360px" value="" 
 												title="different auth system has different parameters: 
 												&#10;[swauth]: username=<account:username>;password=<password>;url=<url> 
 												&#10;[keystone]: username=<account:username>;password=<password>;url=<url> 
@@ -124,15 +125,17 @@
 									<tr>
 										<td >Storage</td>
 										<td >
-											<select name="storage.type" id="storage.type" onChange="changeStorage()">
+											<select name="storage.type" id="storage.type" onChange="changeStorage()" style="width:88px">
 											  <option value="swift" selected="true">swift</option>
-											  <option value="ampli">amplistor</option>
+											  <option value="s3">s3</option>
+											  <option value="obs" selected="true">obs</option>
 											  <option value="mock">mock</option>
 											  <option value="none">none</option>
 											</select>
 										</td>
 										<td >
-											<select name="storage.user">
+											<select name="storage.user" id="storage.user">
+												<option value="none">none</option>
 												<#list userGroupList as userGroup>
 													<#if userGroup_index = 0>
 														<option value=userGroup:${userGroup} selected="true">userGroup:${userGroup}</option>
@@ -146,8 +149,29 @@
 											</select>
 										</td>
 										<td >
-											<input name="storage.url" id="storage.config" type="text" style="width:500px" value=""
+											<input name="storage.url" id="storage.url" type="text" style="width:360px" value=""
 												title="different storage system has different parameters: &#10 [swift]:  &#10 [ampli]: host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id> &#10; [mock]: delay=<time>;&#10 [none]: " /> 
+										</td>
+										<td >
+											<select name="storage.linkWay" id="storage.linkWay">
+											  <option value="none">none</option>
+											  <option value="https" selected="true">https</option>
+											  <option value="http">http</option>
+											</select>
+										</td>
+										<td style="display:none">
+											<select name="storage.v2v4" id="storage.v2v4">
+											  <option value="none">none</option>
+											  <option value="V2" selected="true">V2</option>
+											  <option value="V4">V4</option>
+											</select>
+										</td>
+										<td >
+											<select name="storage.linkTime" id="storage.linkTime">
+											  <option value="none">none</option>
+											  <option value="longLink" selected="true">long</option>
+											  <option value="shortLink">short</option>
+											</select>
 										</td>
 									</tr>
 								</tbody>
@@ -760,30 +784,37 @@
     {
     	var select=document.getElementById("auth.type");
 		var selected=select.options[select.selectedIndex].value;
-		var config=document.getElementById("auth.config");
+		var config=document.getElementById("auth.url");
+		var userSelect=document.getElementById("auth.user");
 		
 		switch(selected)
 		{
 			case "swauth":
-				config.value="username=<account:username>;password=<password>;auth_url=<url>";
-				config.title=" username=test:tester;password=testing;auth_url=http://192.168.0.1:8080/auth/v1.0";
+				config.value="auth_url=<url>";
+				config.title="username=test:tester;password=testing;auth_url=http://192.168.0.1:8080/auth/v1.0";
+				userSelect.options[1].selected = true;
 				break;
 			case "keystone":
-				config.value="username=<username>;password=<password>;auth_url=<url>;service=<service>";
-				config.title=" username=tester;password=testing;tenant_name=test;auth_url=http://127.0.0.1:5000/v2.0;service=swift service";
+				config.value="auth_url=<url>;service=<service>";
+				config.title="username=tester;password=testing;tenant_name=test;auth_url=http://127.0.0.1:5000/v2.0;service=swift service";
+				userSelect.options[1].selected = true;
 				break;
 			case "httpauth":
-				config.value="username=<username>;password=<password>;auth_url=<url>";
-				config.title=" username=tester;password=testing;auth_url=http://192.168.10.1:8080/cdmi";
+				config.value="auth_url=<url>";
+				config.title="username=tester;password=testing;auth_url=http://192.168.10.1:8080/cdmi";
+				userSelect.options[1].selected = true;
 				break;
 			case "mock":
 				config.value="delay=<time>";
+				userSelect.options[0].selected = true;
 				break;		
 			case "none":
 				config.value="";
+				userSelect.options[0].selected = true;
 				break;	
 			default:
 				config.value="";
+				userSelect.options[0].selected = true;
 		}				
     }
     
@@ -791,45 +822,61 @@
     {
     	var select=document.getElementById("storage.type");
 		var selected=select.options[select.selectedIndex].value;
-		var config=document.getElementById("storage.config");
+		var config=document.getElementById("storage.url");
+    	var userSelect=document.getElementById("storage.user");
+    	var linkWaySelect=document.getElementById("storage.linkWay");
+    	var v2v4Select=document.getElementById("storage.v2v4");
+    	var linkTimeSelect=document.getElementById("storage.linkTime");
 		
 		switch(selected)
 		{
 			case "swift":
 				config.value="";
 				config.title="";
-				break;
-			case "ampli":
-				config.value="host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id>";
-				config.title="where nsroot and policy are optional, but policy is mandatory at init stage."
+				userSelect.options[1].selected = true;
+				linkWaySelect.options[0].selected = true;
+				v2v4Select.options[0].selected = true;
+				linkTimeSelect.options[0].selected = true;
 				break;
 			case "s3":
-				config.value="accesskey=<accesskey>;secretkey=<scretkey>;proxyhost=<proxyhost>;proxyport=<proxyport>;endpoint=<endpoint>";
+				config.value="proxyhost=<proxyhost>;proxyport=<proxyport>;endpoint=<endpoint>";
 				config.title="where proxyhost, proxyport and endpoint are optional.";
+				userSelect.options[1].selected = true;
+				linkWaySelect.options[0].selected = true;
+				v2v4Select.options[0].selected = true;
+				linkTimeSelect.options[0].selected = true;
 				break;
-			case "librados":
-				config.value="accesskey=<accesskey>;secretkey=<scretkey>;endpoint=<endpoint>";
-				config.title="";
-				break;		
-			case "cdmi":
-				config.value="type=<cdmi content type>";
-				config.title="where type could be cdmi or non-cdmi to map to cdmi content type and non-cdmi content type.";
-				break;			
-			case "cdmi_swift":
-				config.value="";
-				config.title="The storage type is a CDMI extension specially for token-based authentication like Swift.";
+			case "obs":
+				config.value="proxyhost=<proxyhost>;proxyport=<proxyport>;endpoint=<endpoint>";
+				config.title="where proxyhost, proxyport and endpoint are optional.";
+				userSelect.options[1].selected = true;
+				linkWaySelect.options[1].selected = true;
+				v2v4Select.options[1].selected = true;
+				linkTimeSelect.options[1].selected = true;
 				break;
 			case "mock":
 				config.value="delay=<delay>;size=<object size>;errors=<error rate>;printing=<true|false>;profiling=<true|false>";
 				config.title="The storage type is specially used for self-test and demo only, no storage target is required."
+				userSelect.options[1].selected = true;
+				linkWaySelect.options[0].selected = true;
+				v2v4Select.options[0].selected = true;
+				linkTimeSelect.options[0].selected = true;
 				break;
 			case "none":
 				config.value="";
 				config.title="The storage type is specially used to evaluate the program itself's overhead, especially at high volumes.";
+				userSelect.options[0].selected = true;
+				linkWaySelect.options[0].selected = true;
+				v2v4Select.options[0].selected = true;
+				linkTimeSelect.options[0].selected = true;
 				break;	
 			default:
 				config.value="";
 				config.title="";
+				userSelect.options[1].selected = true;
+				linkWaySelect.options[0].selected = true;
+				v2v4Select.options[0].selected = true;
+				linkTimeSelect.options[0].selected = true;
 		}		
 	}
  </script>
