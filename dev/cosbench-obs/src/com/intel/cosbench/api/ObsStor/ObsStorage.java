@@ -23,7 +23,6 @@ import com.obs.services.ObsClient;
 import com.obs.services.ObsConfiguration;
 import com.obs.services.exception.ObsException;
 import com.obs.services.model.CompleteMultipartUploadRequest;
-import com.obs.services.model.CompleteMultipartUploadResult;
 import com.obs.services.model.DeleteObjectsRequest;
 import com.obs.services.model.GetObjectRequest;
 import com.obs.services.model.InitiateMultipartUploadRequest;
@@ -34,7 +33,6 @@ import com.obs.services.model.ObjectMetadata;
 import com.obs.services.model.ObsObject;
 import com.obs.services.model.PartEtag;
 import com.obs.services.model.S3Object;
-import com.obs.services.model.UploadPartRequest;
 import com.obs.services.model.UploadPartResult;
 
 public class ObsStorage extends NoneStorage{
@@ -46,6 +44,11 @@ public class ObsStorage extends NoneStorage{
 	private String endpoint;
 
 	private ObsClient client;
+	
+	List<PartEtag> partEtags;
+	UploadPartResult uploadPartResult; 
+	CompleteMultipartUploadRequest request;
+	InitiateMultipartUploadResult imu;
 
 	@Override
 	public void init(Config config, Logger logger) {
@@ -213,59 +216,55 @@ public class ObsStorage extends NoneStorage{
 	}
 
 	@Override
-	public void multiPartUpload(String container, String object, long sizePart, InputStream in) {
-		super.multiPartUpload(container, object, sizePart, in);
-		
-		try {
-			LOGGER.debug("the size of the file to upload:"+in.available());
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		System.out.println(client);
-		try {
-			UploadPartResult uploadPartResult = null; 
-			List<PartEtag> partEtags = new ArrayList<PartEtag>();
-			PartEtag partEtag = new PartEtag();
-			//do init
+	public long multiPartUpload(String container, String object, long sizePart, InputStream in, boolean isFinish, int partNum) {
+		super.multiPartUpload(container, object, sizePart, in ,isFinish, partNum);
+		long end;
+		if (partNum == 1) {
+			// do init
+			partEtags = new ArrayList<PartEtag>();
+			request = new CompleteMultipartUploadRequest();
+			imu = null;
 			InitiateMultipartUploadRequest initRequest = new InitiateMultipartUploadRequest();
+
 			initRequest.setBucketName(container);
 			initRequest.setObjectKey(object);
-			InitiateMultipartUploadResult imu = client.initiateMultipartUpload(initRequest);
-			LOGGER.debug("bucketName:" + imu.getBucketName() + "\tObjectKey:" + imu.getObjectKey()+ "\tUploadId:" + imu.getUploadId());
-			//do upload
-			String uploadId =imu.getUploadId();
-			int partNumber = 1;
-			try {
-				uploadPartResult = client.uploadPart(imu.getBucketName(), imu.getObjectKey(), uploadId, partNumber, in);
-			}catch(Exception e) {
-				e.printStackTrace();
-				System.out.println(client.headBucket(imu.getBucketName()));
-			}
-			
-			
-			LOGGER.debug(partNumber + " part is : " + uploadPartResult.getEtag());
+			imu = client.initiateMultipartUpload(initRequest);
+			LOGGER.debug("bucketName:" + imu.getBucketName() + "\tObjectKey:" + imu.getObjectKey() + "\tUploadId:"
+					+ imu.getUploadId());
+			// do upload
+		}
+		PartEtag partEtag = new PartEtag();
+		System.out.println("第:" + partNum + "次uploadId是 " + imu.getUploadId());
+		long start = System.nanoTime();
+		try 
+		{
+			uploadPartResult = client.uploadPart(imu.getBucketName(), imu.getObjectKey(), imu.getUploadId(), partNum,
+					in);
+			end = System.nanoTime();
+			System.out.println("完成时间" + (end - start) / 1000000);
+			LOGGER.debug(partNum + " part is : " + uploadPartResult.getEtag());
 			partEtag.seteTag(uploadPartResult.getEtag());
 			partEtag.setPartNumber(uploadPartResult.getPartNumber());
 			partEtags.add(partEtag);
-			//complete multiPartUpload
-			CompleteMultipartUploadRequest request = new CompleteMultipartUploadRequest();
-			request.setBucketName(imu.getBucketName());
-			request.setObjectKey(imu.getObjectKey());
-			request.setPartEtag(partEtags);
-			request.setUploadId(imu.getUploadId());
-			try {
-				CompleteMultipartUploadResult result = client.completeMultipartUpload(request);
-			}catch(Exception e) {
-				e.printStackTrace();
-				System.out.println(client.headBucket(imu.getBucketName()));
+
+			// complete multiPartUpload
+			if (isFinish) 
+			{
+				request.setBucketName(imu.getBucketName());
+				request.setObjectKey(imu.getObjectKey());
+				request.setPartEtag(partEtags);
+				request.setUploadId(imu.getUploadId());
+				client.completeMultipartUpload(request);
 			}
-//			System.out.println("ObjectKey: "+result. getObjectKey() + ", Etag: " + result.getEtag());
-		}catch(ObsException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			System.out. println("Error message: " + e.getErrorMessage() + ". ResponseCode: " + e.getResponseCode());
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
+			System.out.println(client.headBucket(imu.getBucketName()));
+			return -1;
+		} 
+//		finally {
+//			closeClient();
+//		}
+		return (end - start) / 1000000;
 	}
 
 	@Override
@@ -299,8 +298,28 @@ public class ObsStorage extends NoneStorage{
 	    	e.printStackTrace();
 	    	System.out. println("Error message: " + e.getErrorMessage()+ ". ResponseCode: " + e.getResponseCode());
 	    }
+	    finally
+	    {
+	        closeClient();
+	    }
 	}
 
+	/**
+	 * release client
+	 */
+	private void closeClient() {
+		try
+		{
+		 if(client != null)
+		 {
+		  client.close();
+		 }
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
 
 	
 }

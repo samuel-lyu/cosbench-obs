@@ -142,9 +142,10 @@ public class NoneStorage implements StorageAPI {
     
 
 	@Override
-	public void multiPartUpload(String container, String object, long sizePart, InputStream in) {
+	public long multiPartUpload(String container, String object, long sizePart, InputStream in, boolean isFinish, int partNum) {
 		if (logging)
             logger.info("performing PUT by multiPart at /{}/{}", container, object);
+		return 0l;
 	}
 
 	@Override

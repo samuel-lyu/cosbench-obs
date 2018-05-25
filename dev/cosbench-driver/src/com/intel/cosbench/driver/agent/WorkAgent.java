@@ -174,7 +174,6 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
 
     private void doWork() {
         doSnapshot();
-        System.out.println(workerContext.isFinished());
         while (!workerContext.isFinished())
             try {
                 performOperation();
@@ -233,6 +232,11 @@ class WorkAgent extends AbstractAgent implements Session, OperationListener {
         long window = lsample - lcheck;
         Report report = new Report();
         for (Mark mark : currMarks) {
+        	//TODO need confirm
+//        	if(mark.getXtSum() == 0)
+//        	{
+//        		continue;
+//        	}
             report.addMetrics(Metrics.convert(mark, window));
             mark.clear();
         }

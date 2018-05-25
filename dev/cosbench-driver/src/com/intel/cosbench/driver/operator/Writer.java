@@ -13,7 +13,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. 
-*/ 
+*/
 
 package com.intel.cosbench.driver.operator;
 
@@ -44,163 +44,196 @@ import com.intel.cosbench.service.AbortedException;
  * 
  */
 class Writer extends AbstractOperator {
+	private static final int OBS_ERROR = -1;
 	private static final Logger LOGGER = LogFactory.getSystemLogger();
-    public static final String OP_TYPE = "write";
+	public static final String OP_TYPE = "write";
 
-    private boolean chunked;
-    private boolean isRandom;
-    private long partSize = 0;
-    private long base;
-    private boolean hashCheck = false;
-    private ObjectPicker objPicker = new ObjectPicker();
-    private SizePicker sizePicker = new SizePicker();
-    public Writer() {
-        /* empty */
-    }
+	private boolean isFinished;
+	private boolean chunked;
+	private boolean isRandom;
+	private long partSize = 0;
+	private long base;
+	private boolean hashCheck = false;
+	private ObjectPicker objPicker = new ObjectPicker();
+	private SizePicker sizePicker = new SizePicker();
 
-    @Override
-    protected void init(String id, int ratio, String division, Config config) {
-        super.init(id, ratio, division, config);
-        objPicker.init(division, config);
-        sizePicker.init(config);
-        chunked = config.getBoolean("chunked", false);
-        isRandom = !config.get("content", "random").equals("zero");
-        hashCheck = config.getBoolean("hashCheck", false);
-        if(config.contains("partSize")) {
-        	partSize = pase(config.get("partSize"));
-        	LOGGER.debug("Upload a single segment size:"+partSize);
-        }
-    }
+	public Writer() {
+		/* empty */
+	}
 
-    @Override
-    public String getOpType() {
-        return OP_TYPE;
-    }
+	@Override
+	protected void init(String id, int ratio, String division, Config config) {
+		super.init(id, ratio, division, config);
+		objPicker.init(division, config);
+		sizePicker.init(config);
+		chunked = config.getBoolean("chunked", false);
+		isRandom = !config.get("content", "random").equals("zero");
+		hashCheck = config.getBoolean("hashCheck", false);
+		if (config.contains("partSize")) {
+			partSize = pase(config.get("partSize"));
+			LOGGER.debug("Upload a single segment size:" + partSize);
+		}
+	}
 
-    @Override
-    protected void operate(int idx, int all, Session session) {
-    	Sample sample;
-        Random random = session.getRandom();
-        long size = sizePicker.pickObjSize(random);
-        long len = chunked ? -1 : size;
-        String[] path = objPicker.pickObjPath(random, idx, all);
-        RandomInputStream in = new RandomInputStream(size, random, isRandom,
-                hashCheck);
-        
-        //Determine whether to Multistage
-        if(partSize == 0) {
-        	sample = doWrite(in, len, path[0], path[1], config, session,
-    				this);
-        }else {
-        	sample = putObjectByMultistage(in, len, path[0], path[1], partSize, config, session,
-    				this);
-        }
-        
-        
-        session.getListener().onSampleCreated(sample);
-        Date now = sample.getTimestamp();
-		Result result = new Result(now, getId(), getOpType(), getSampleType(),
-				getName(), sample.isSucc());
-        session.getListener().onOperationCompleted(result);
-    }
-    
-    public static  Sample doWrite(InputStream in, long length, String conName,
-            String objName, Config config, Session session, Operator op) {
-        if (Thread.interrupted())
-            throw new AbortedException();
-        
-        XferCountingInputStream cin = new XferCountingInputStream(in);	
-        long start = System.nanoTime();
+	@Override
+	public String getOpType() {
+		return OP_TYPE;
+	}
 
-        try {
-            session.getApi()
-                    .createObject(conName, objName, cin, length, config);
-        } catch (StorageInterruptedException sie) {
-            doLogErr(session.getLogger(), sie.getMessage(), sie);
-            throw new AbortedException();
-        } catch (Exception e) {
-        	isUnauthorizedException(e, session);
-        	errorStatisticsHandle(e, session, conName + "/" + objName);
-        	
-			return new Sample(new Date(), op.getId(), op.getOpType(),
-					op.getSampleType(), op.getName(), false);
+	@Override
+	protected void operate(int idx, int all, Session session) {
+		Sample sample = null;
+		Random random = session.getRandom();
+		long size = sizePicker.pickObjSize(random);
+		long len = chunked ? OBS_ERROR : size;
+		String[] path = objPicker.pickObjPath(random, idx, all);
+
+		// Determine whether to Multistage
+		if (partSize == 0) 
+		{
+			RandomInputStream in = new RandomInputStream(size, random, isRandom, hashCheck);
+			sample = doWrite(in, len, path[0], path[1], config, session, this);
 			
-        } finally {
-            IOUtils.closeQuietly(cin);
-        }
+			session.getListener().onSampleCreated(sample);
+			Date now = sample.getTimestamp();
+			Result result = new Result(now, getId(), getOpType(), getSampleType(), getName(), sample.isSucc());
+			session.getListener().onOperationCompleted(result);
+		} 
+		else 
+		{
+			long count = size / partSize;
+			if(size % partSize != 0)
+			{
+				count++;
+			}
+			int partNum = 0;
+			isFinished = false;
+			Result result = null;
+			while (size > 0) {
+				RandomInputStream in = new RandomInputStream(size / partSize != 0 ? partSize : size % partSize, random,
+						isRandom, hashCheck);
+				System.out.println("第" + (partNum+1 )+ "段：" + in.available());
+				partNum++;
+				if(partNum == count )
+				{
+					isFinished = true;
+				}
+				sample = putObjectByMultistage(in, size / partSize != 0 ? partSize : size % partSize, path[0], path[1],
+						config, session, this, isFinished, partNum);
+				session.getListener().onSampleCreated(sample);
+				Date now = sample.getTimestamp();
+				result = new Result(now, getId(), getOpType(), getSampleType(), getName(), sample.isSucc());
+				if(partNum == count)
+				{
+					//Wait page display Sample，if not the last result of sample will lose display
+					try {
+						Thread.sleep(5000); 
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				session.getListener().onOperationCompleted(result);
+//				if (sample.isSucc() == false) {
+//					break;
+//				}
+				size -= partSize;
+			}
+		}
+	}
 
-        long end = System.nanoTime();
-		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-				op.getName(), true, (end - start) / 1000000,
-				cin.getXferTime(), cin.getByteCount());
-    }
-    
-    public static Sample putObjectByMultistage(InputStream in, long length, String conName,
-            String objName, long partSize, Config config, Session session, Operator op) {
-    	if (Thread.interrupted())
-            throw new AbortedException();
-        
-        XferCountingInputStream cin = new XferCountingInputStream(in);	
-        long start = System.nanoTime();
+	public static Sample doWrite(InputStream in, long length, String conName, String objName, Config config,
+			Session session, Operator op) {
+		if (Thread.interrupted())
+			throw new AbortedException();
 
-        try {
-            session.getApi().multiPartUpload(conName, objName, partSize, cin);
-        } catch (StorageInterruptedException sie) {
-            doLogErr(session.getLogger(), sie.getMessage(), sie);
-            throw new AbortedException();
-        } catch (Exception e) {
-        	isUnauthorizedException(e, session);
-        	errorStatisticsHandle(e, session, conName + "/" + objName);
-        	
-			return new Sample(new Date(), op.getId(), op.getOpType(),
-					op.getSampleType(), op.getName(), false);
-			
-        } finally {
-            IOUtils.closeQuietly(cin);
-        }
+		XferCountingInputStream cin = new XferCountingInputStream(in);
+		long start = System.nanoTime();
 
-        long end = System.nanoTime();
-		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(),
-				op.getName(), true, (end - start) / 1000000,
-				cin.getXferTime(), cin.getByteCount());
-    }
-    
-    private long pase(String pattern) {
-    	base = setUnit(pattern);
-    	pattern = StringUtils.substringBetween(pattern, "(", ")");
-        String[] args = StringUtils.split(pattern, ',');
-        Integer value = Integer.parseInt(args[0]);
-    	return value*base;
-    }
-    
-    private long setUnit(String unit) {
-        if (StringUtils.endsWith(unit, "GB"))
-            return (base = 1000 * 1000 * 1000);
-        if (StringUtils.endsWith(unit, "MB"))
-            return (base = 1000 * 1000);
-        if (StringUtils.endsWith(unit, "KB"))
-            return (base = 1000);
-        if (StringUtils.endsWith(unit, "B"))
-            return (base = 1);
-        String msg = "unrecognized size unit: " + unit;
-        throw new ConfigException(msg);
-    }
-    /*
-     * public static Sample doWrite(byte[] data, String conName, String objName,
-     * Config config, Session session) { if (Thread.interrupted()) throw new
-     * AbortedException();
-     * 
-     * long start = System.currentTimeMillis();
-     * 
-     * try { session.getApi().createObject(conName, objName, data, config); }
-     * catch (StorageInterruptedException sie) { throw new AbortedException(); }
-     * catch (Exception e) { doLog(session.getLogger(),
-     * "fail to perform write operation", e); return new Sample(new Date(),
-     * OP_TYPE, false); }
-     * 
-     * long end = System.currentTimeMillis();
-     * 
-     * Date now = new Date(end); return new Sample(now, OP_TYPE, true, end -
-     * start, data.length); }
-     */
+		try {
+			session.getApi().createObject(conName, objName, cin, length, config);
+		} catch (StorageInterruptedException sie) {
+			doLogErr(session.getLogger(), sie.getMessage(), sie);
+			throw new AbortedException();
+		} catch (Exception e) {
+			isUnauthorizedException(e, session);
+			errorStatisticsHandle(e, session, conName + "/" + objName);
+
+			return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(), op.getName(), false);
+
+		} finally {
+			IOUtils.closeQuietly(cin);
+		}
+
+		long end = System.nanoTime();
+		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(), op.getName(), true,
+				(end - start) / 1000000, cin.getXferTime(), cin.getByteCount());
+	}
+
+	public static Sample putObjectByMultistage(InputStream in, long size, String conName, String objName,
+			Config config, Session session, Operator op, boolean isFinish, int partNum) {
+		if (Thread.interrupted())
+			throw new AbortedException();
+		long time;
+		XferCountingInputStream cin = new XferCountingInputStream(in);
+		try {
+			time = session.getApi().multiPartUpload(conName, objName, size, cin, isFinish,partNum);
+			System.out.println("ObsStorage返回writer时间："+ time);
+		} catch (StorageInterruptedException sie) {
+			doLogErr(session.getLogger(), sie.getMessage(), sie);
+			throw new AbortedException();
+		} catch (Exception e) {
+			isUnauthorizedException(e, session);
+			errorStatisticsHandle(e, session, conName + "/" + objName);
+
+			return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(), op.getName(), false);
+
+		} finally {
+			IOUtils.closeQuietly(cin);
+		}
+		//if ObsStorage error occurred time will be -1
+		if(time != OBS_ERROR)
+		{
+			return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(), op.getName(), true,
+					time, cin.getXferTime(), cin.getByteCount());
+		}
+		return new Sample(new Date(), op.getId(), op.getOpType(), op.getSampleType(), op.getName(), false);
+	}
+
+	private long pase(String pattern) {
+		base = setUnit(pattern);
+		pattern = StringUtils.substringBetween(pattern, "(", ")");
+		String[] args = StringUtils.split(pattern, ',');
+		Integer value = Integer.parseInt(args[0]);
+		return value * base;
+	}
+
+	private long setUnit(String unit) {
+		if (StringUtils.endsWith(unit, "GB"))
+			return (base = 1000 * 1000 * 1000);
+		if (StringUtils.endsWith(unit, "MB"))
+			return (base = 1000 * 1000);
+		if (StringUtils.endsWith(unit, "KB"))
+			return (base = 1000);
+		if (StringUtils.endsWith(unit, "B"))
+			return (base = 1);
+		String msg = "unrecognized size unit: " + unit;
+		throw new ConfigException(msg);
+	}
+	/*
+	 * public static Sample doWrite(byte[] data, String conName, String objName,
+	 * Config config, Session session) { if (Thread.interrupted()) throw new
+	 * AbortedException();
+	 * 
+	 * long start = System.currentTimeMillis();
+	 * 
+	 * try { session.getApi().createObject(conName, objName, data, config); } catch
+	 * (StorageInterruptedException sie) { throw new AbortedException(); } catch
+	 * (Exception e) { doLog(session.getLogger(), "fail to perform write operation",
+	 * e); return new Sample(new Date(), OP_TYPE, false); }
+	 * 
+	 * long end = System.currentTimeMillis();
+	 * 
+	 * Date now = new Date(end); return new Sample(now, OP_TYPE, true, end - start,
+	 * data.length); }
+	 */
 }

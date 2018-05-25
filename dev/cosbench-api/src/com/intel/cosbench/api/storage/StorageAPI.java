@@ -193,8 +193,9 @@ public interface StorageAPI {
      *            - the name of an object.
      * @param sizePart
      *            - the size of one part.
+     * @param isFinish 
      */
-    public void multiPartUpload(String container, String object, long sizePart, InputStream in);
+    public long multiPartUpload(String container, String object, long sizePart, InputStream in, boolean isFinish, int partNum);
     
     /**
      * deleteObjects
