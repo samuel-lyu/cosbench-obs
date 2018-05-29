@@ -44,6 +44,9 @@ import com.intel.cosbench.service.AbortedException;
  * 
  */
 class Writer extends AbstractOperator {
+	
+	private static final int DEFAULT_SLEEP_TIME = 5000;
+	private static Logger logger = LogFactory.getSystemLogger();
 	private static final int OBS_ERROR = -1;
 	private static final Logger LOGGER = LogFactory.getSystemLogger();
 	public static final String OP_TYPE = "write";
@@ -112,8 +115,8 @@ class Writer extends AbstractOperator {
 			while (size > 0) {
 				RandomInputStream in = new RandomInputStream(size / partSize != 0 ? partSize : size % partSize, random,
 						isRandom, hashCheck);
-				System.out.println("第" + (partNum+1 )+ "段：" + in.available());
 				partNum++;
+				logger.debug("begin upload num {} paragraph, total count is {}", partNum , count);
 				if(partNum == count )
 				{
 					isFinished = true;
@@ -127,9 +130,9 @@ class Writer extends AbstractOperator {
 				{
 					//Wait page display Sample，if not the last result of sample will lose display
 					try {
-						Thread.sleep(5000); 
+						Thread.sleep(DEFAULT_SLEEP_TIME); 
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						logger.error("thread sleep error,operate id is {}", this.id);
 					}
 				}
 				session.getListener().onOperationCompleted(result);
@@ -177,7 +180,6 @@ class Writer extends AbstractOperator {
 		XferCountingInputStream cin = new XferCountingInputStream(in);
 		try {
 			time = session.getApi().multiPartUpload(conName, objName, size, cin, isFinish,partNum);
-			System.out.println("ObsStorage返回writer时间："+ time);
 		} catch (StorageInterruptedException sie) {
 			doLogErr(session.getLogger(), sie.getMessage(), sie);
 			throw new AbortedException();

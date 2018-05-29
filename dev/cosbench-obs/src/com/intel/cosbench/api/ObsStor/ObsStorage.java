@@ -403,14 +403,12 @@ public class ObsStorage extends NoneStorage{
 			// do upload
 		}
 		PartEtag partEtag = new PartEtag();
-		System.out.println("第:" + partNum + "次uploadId是 " + imu.getUploadId());
 		long start = System.nanoTime();
 		try 
 		{
 			uploadPartResult = client.uploadPart(imu.getBucketName(), imu.getObjectKey(), imu.getUploadId(), partNum,
 					in);
 			end = System.nanoTime();
-			System.out.println("完成时间" + (end - start) / 1000000);
 			LOGGER.debug(partNum + " part is : " + uploadPartResult.getEtag());
 			partEtag.seteTag(uploadPartResult.getEtag());
 			partEtag.setPartNumber(uploadPartResult.getPartNumber());
@@ -426,8 +424,7 @@ public class ObsStorage extends NoneStorage{
 				client.completeMultipartUpload(request);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println(client.headBucket(imu.getBucketName()));
+			LOGGER.error("Exception {} during multiPartUpload, uploadId is {}",e.getCause(),imu.getUploadId());
 			return -1;
 		} 
 		return (end - start) / 1000000;
