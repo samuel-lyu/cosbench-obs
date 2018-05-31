@@ -4,21 +4,13 @@
 	$("#echartsDiv").css( 'width', (window.innerWidth-170)*0.95+'px');
 	$("#echartsDiv").css( 'height', (window.innerHeight-200)*0.8+'px');
 	var timeStampArray = new Array();
-	var readThroughputArray = new Array();
-	var writeThroughputArray = new Array();
 	<#list allSnapshots as ssInfo >
 		timeStampArray.push('${ssInfo.timestamp?time}');
-		<#assign allMetrics = ssInfo.report.allMetrics >
-		<#list allMetrics as mInfo >
-			<#if mInfo.opName == 'read' >
-           		readThroughputArray.push(${mInfo.throughput})
-         	</#if>
-			<#if mInfo.opName == 'write' >
-           		writeThroughputArray.push(${mInfo.throughput})
-         	</#if>
-		</#list>
 	</#list>
 	
+	var yAxisName = ${yAxisName};
+	var allMetricsName = ${allMetricsName};
+	var allMetricsData = ${allMetricsData};
     var myChart = echarts.init(document.getElementById('echartsDiv'));
     var option = {
         title: {
@@ -29,7 +21,7 @@
         	trigger: 'axis'
     	},
         legend: {
-        	data:['read','write'],
+        	data:allMetricsName,
         	x: 'center'
     	},
     	grid: {
@@ -46,21 +38,10 @@
 	        data: timeStampArray
 	    },
 	    yAxis: {
-	    	name: 'Throughput(op/s)',
+	    	name: yAxisName,
 	        type: 'value'
 	    },
-	    series: [
-		    {
-		    	name:"read",
-		        data: readThroughputArray,
-		        type: 'line'
-		    },
-		    {
-		    	name:"write",
-		        data: writeThroughputArray,
-		        type: 'line'
-		    }
-	    ]	
+	    series:allMetricsData
     };
     myChart.setOption(option);
 </script>

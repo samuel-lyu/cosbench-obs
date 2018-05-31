@@ -5,7 +5,6 @@
 	<link href="resources/css/bootstrap.min.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/style.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
-	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
 	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/echarts.js"></script>
@@ -23,12 +22,25 @@
 				<div class="graph">
 					<nav>
 						<ul>
-							<li><a href="#section-1" class="icon-shop"><i class="lnr lnr-briefcase"></i> <span>Data</span></a></li>
-							<li><a href="#section-2" class="icon-cup"><i class="lnr lnr-lighter"></i> <span>Chart</span></a></li>
+							<li><a href="#section-1" class="icon-cup"><i class="lnr lnr-lighter"></i> <span>Chart</span></a></li>
+							<li><a href="#section-2" class="icon-shop"><i class="lnr lnr-briefcase"></i> <span>Data</span></a></li>
 						</ul>
 					</nav>
 					<div class="content tab" style="width:100%">
 						<section id="section-1">
+							<div class="SelectMetricsToShowDiv" style="margin:10px 0px">
+								<h3 style="display:inline-block;margin:0px">Metric to show:&nbsp;</h3>
+								<a href="?wid=${wInfo.id}&sid=${sInfo.id}&metricName=throughput"><input type="button" name="metricsName" value="Throughput" checked="true"></input></a>
+								<a href="?wid=${wInfo.id}&sid=${sInfo.id}&metricName=bandWidth"><input type="button" name="metricsName" value="BandWidth"></input></a>
+								<a href="?wid=${wInfo.id}&sid=${sInfo.id}&metricName=byteCount"><input type="button" name="metricsName" value="ByteCount"></input></a>
+								<a href="?wid=${wInfo.id}&sid=${sInfo.id}&metricName=opCount"><input type="button" name="metricsName" value="OpCount"></input></a>
+								<a href="?wid=${wInfo.id}&sid=${sInfo.id}&metricName=avgResTime"><input type="button" name="metricsName" value="AvgResTime"></input></a>
+								<a href="?wid=${wInfo.id}&sid=${sInfo.id}&metricName=avgProceTime"><input type="button" name="metricsName" value="AvgProceTime"></input></a>
+							</div>
+							<#assign allSnapshots = sInfo.snapshots>
+							<#include "timeline-echarts.ftl">
+						</section>
+						<section id="section-2">
 							<div >
 							  <h2>Stage</h2>
 							  <h3>Basic Info</h3>
@@ -59,12 +71,8 @@
 							  <#include "timeline-metrics.ftl">
 							  <p><a href="timeline.csv?wid=${wInfo.id}&sid=${sInfo.id}">export CSV file</a></p>
 							  <p><a href="stage.html?wid=${wInfo.id}&sid=${sInfo.id}">go back to stage</a></p>
-							</div> <#-- end of content -->
-
 						</section>
-						<section id="section-2">
-							<#include "timeline-echarts.ftl">
-						</section>
+						
 					</div>
 				</div>	
 			</div>

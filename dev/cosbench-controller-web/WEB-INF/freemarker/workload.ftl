@@ -12,7 +12,6 @@
 	<link href="resources/css/bootstrap.min.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/style.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
-	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
 	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	<script src="resources/js/echarts.js"></script>
@@ -110,6 +109,15 @@
 			  
 			  <#if info.currentStage??>
 		  		<#assign allSnapshots = info.currentStage.snapshots >
+		  		<div class="SelectMetricsToShowDiv" style="margin:10px 0px">
+		  			<h3 style="display:inline-block;margin:0px">Metric to show:&nbsp;</h3>
+					<a href="?id=${info.id}&metricName=throughput"><input type="button" name="metricsName" value="Throughput" checked="true"></input></a>
+					<a href="?id=${info.id}&metricName=bandWidth"><input type="button" name="metricsName" value="BandWidth"></input></a>
+					<a href="?id=${info.id}&metricName=byteCount"><input type="button" name="metricsName" value="ByteCount"></input></a>
+					<a href="?id=${info.id}&metricName=opCount"><input type="button" name="metricsName" value="OpCount"></input></a>
+					<a href="?id=${info.id}&metricName=avgResTime"><input type="button" name="metricsName" value="AvgResTime"></input></a>
+					<a href="?id=${info.id}&metricName=avgProceTime"><input type="button" name="metricsName" value="AvgProceTime"></input></a>
+				</div>
 	  			<#include "timeline-echarts.ftl">
 	  		  </#if>
 			  

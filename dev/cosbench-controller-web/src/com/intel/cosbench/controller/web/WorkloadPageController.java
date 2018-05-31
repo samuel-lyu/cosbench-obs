@@ -26,11 +26,14 @@ import javax.servlet.http.*;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.intel.cosbench.bench.Snapshot;
 import com.intel.cosbench.model.*;
 import com.intel.cosbench.service.ControllerService;
 import com.intel.cosbench.web.*;
 
 public class WorkloadPageController extends AbstractController {
+	
+	private String metricName = "throughput";  //The metric shown in the echart chart, the default metric is throughput
 
     protected ControllerService controller;
 
@@ -41,6 +44,9 @@ public class WorkloadPageController extends AbstractController {
     @Override
     protected ModelAndView process(HttpServletRequest req,
             HttpServletResponse res) {
+    	if (StringUtils.isNotEmpty(req.getParameter("metricName"))) {
+    		this.metricName = req.getParameter("metricName");
+		}
         String id = req.getParameter("id");
         if (StringUtils.isEmpty(id))
             throw new BadRequestException();
@@ -62,8 +68,15 @@ public class WorkloadPageController extends AbstractController {
     }
 
     protected ModelAndView process(WorkloadInfo info) {
-        ModelAndView result = new ModelAndView("workload");
-        StageInfo stage = info.getCurrentStage();
+    	ModelAndView result = new ModelAndView("workload");;
+    	StageInfo stage = info.getCurrentStage();
+        if (stage != null) {
+        	Snapshot[] snapshots = stage.getSnapshots();
+        	TimelinePageController timelinePageController = new TimelinePageController(metricName);
+        	result.addObject("yAxisName",timelinePageController.getYAxisName(metricName, snapshots));
+            result.addObject("allMetricsName", timelinePageController.getAllMetricsName(snapshots));
+            result.addObject("allMetricsData", timelinePageController.getAllMetricsData(snapshots));
+		}
         result.addObject("info", info);
         result.addObject("isStopped", isStopped(info.getState()));
         result.addObject("isRunning", isRunning(info.getState()));
@@ -71,5 +84,4 @@ public class WorkloadPageController extends AbstractController {
                 stage == null ? false : StageState.isRunning(stage.getState()));
         return result;
     }
-
 }
