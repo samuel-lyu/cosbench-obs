@@ -313,4 +313,40 @@ public class SimpleWorkloadArchiver implements WorkloadArchiver {
 		return count;
 	}
 
+	@Override
+	public void delete(String deleteId) {
+		 File file = ARCHIVE_DIR;
+		 String[] list = file.list();
+		 for(String ls: list)
+		 {
+			 if(ls.split("-")[0].equals(deleteId))
+			 {
+				 delAllFile(ARCHIVE_DIR+File.separator+ls);
+			 }else if(ls.split("-")[0].equals("run-history.csv"))
+			 {
+				 
+			 }else if(ls.split("-")[0].equals("workloads.csv"))
+			 {
+				 
+			 }
+			 
+		 }
+	}
+
+	private void delAllFile(String file) {
+		if(!new File(file).exists())
+		{
+			return;
+		}
+		if(new File(file).isDirectory())
+		{
+			for(String fs: new File(file).list())
+			{
+				new File(file+File.separator+fs).delete();
+			}
+		}
+		new File(file).delete();
+		
+	}
+
 }

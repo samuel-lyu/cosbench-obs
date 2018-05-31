@@ -391,4 +391,9 @@ class COSBControllerService implements ControllerService, WorkloadListener {
 		return memRepo.getArchivedWorkloads(FINISHED);
 	}
 
+	@Override
+	public void delete(String deleteId) {
+		archiver.delete(deleteId);
+	}
+
 }

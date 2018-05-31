@@ -63,4 +63,6 @@ public interface ControllerService {
 
 	public WorkloadInfo[] getArchivedWorkloads(String FINISHED);
 
+	public void delete(String deleteId);
+
 }

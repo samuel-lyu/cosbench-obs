@@ -69,6 +69,11 @@
 		document.getElementById('resubmitIds').value = ids;
 		document.getElementById('resubmitForm').submit();
 	}
+	function deleteWorkloads() {
+		var aids = findChecked('ArchivedWorkload');
+		document.getElementById('deleteIds').value = aids;
+		document.getElementById('deleteForm').submit();
+	}
   </script>
   <title>COSBench Controller</title> 
 </head>
@@ -122,7 +127,13 @@
 				</#if>
 				<table class="info-table">
 				<tr>
-				  	<td style="width:50%;"></td>
+				  	<td align="left" style="width:50%;">
+					  <form id="deleteForm" method="POST" action="historyWorkload.html">
+						 <input id="deleteIds" type="hidden" name="deleteIds" value="">
+						 <input type="hidden" name="delete" value="yes">
+						 <input type="button" onclick="deleteWorkloads();" value="delete">
+					   </form>
+				  	</td>
 				  	<td style="width:50%;">
 				  	<h>TotalPage:&nbsp;</h><span id = "totalPage">${totalPage}</span>
 				  	<h>&nbsp;&nbsp;CurrentPage:&nbsp;</h><span id = "currentPage">${currentPage}</span>

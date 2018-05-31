@@ -50,6 +50,7 @@ public class HistoryWorkloadPageController extends AbstractController {
 		ModelAndView result = new ModelAndView("historyWorkload");
 		String resubmitIds = req.getParameter("resubmitIds");
 		String resubmit = req.getParameter("resubmit");
+		String deleteIds = req.getParameter("deleteIds");
 		Integer page = PageUtil.getPageParam(req);
 		String loadArch = req.getParameter("loadArch");
 		if (!StringUtils.isEmpty(resubmit)&&!StringUtils.isEmpty(resubmitIds)){
@@ -58,6 +59,14 @@ public class HistoryWorkloadPageController extends AbstractController {
 				String newId = controller.resubmit(resubmitId);
 				controller.fire(newId);
 			}
+		}
+		if(!StringUtils.isEmpty(deleteIds))
+		{
+			String[] ids = deleteIds.split("_");
+			for (String deleteId : ids){
+				controller.delete(deleteId);
+			}
+			
 		}
 		if (!StringUtils.isEmpty(loadArch) && loadArch.equals("true"))
 			controller.setloadArch(true);
@@ -71,7 +80,7 @@ public class HistoryWorkloadPageController extends AbstractController {
         if(page < 1)
 		{
 			page = 1;
-		}else if(page > totalPage)
+		}else if(page > totalPage && totalPage>0)
 		{
 			page = totalPage;
 		}

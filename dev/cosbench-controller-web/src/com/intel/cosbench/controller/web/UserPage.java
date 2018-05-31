@@ -15,7 +15,7 @@ public class UserPage {
 		if(page < 1)
 		{
 			page = 1;
-		}else if(page > totalPage)
+		}else if(page > totalPage && totalPage>0)
 		{
 			page = totalPage;
 		}

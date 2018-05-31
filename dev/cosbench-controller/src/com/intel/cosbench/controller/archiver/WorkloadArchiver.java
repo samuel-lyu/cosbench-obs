@@ -38,4 +38,6 @@ public interface WorkloadArchiver {
 
     public File getWorkloadConfig(WorkloadInfo workload);
 
+	public void delete(String deleteId);
+
 }
