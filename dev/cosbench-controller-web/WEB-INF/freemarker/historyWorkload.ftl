@@ -6,7 +6,6 @@
 	<link href="resources/css/bootstrap.min.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/style.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
-	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
 	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	
@@ -84,7 +83,7 @@
 			  
 			  <div>
 				<h3>Archived Workloads  <span class="counter state">${totalWorkLoad}</span></h3>
-				<p><a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&metrics=t&metrics=succ">view performance matrix</a></p>
+				<p><a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&metrics=t&metrics=succ&page=1">view performance matrix</a></p>
 				<p>
 					<#if loadArch == false>
 					  <p><a href="historyWorkload.html?loadArch=true">load archived workloads</a></p>

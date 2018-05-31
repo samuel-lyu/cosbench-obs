@@ -6,7 +6,6 @@
 	<link href="resources/css/bootstrap.min.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/style.css" rel='stylesheet' type='text/css' />
 	<link href="resources/css/font-awesome.css" rel="stylesheet"> 
-	<link href='https://fonts.googleapis.com/css?family=Roboto:700,500,300,100italic,100,400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="resources/cosbench.css" />
 	<script src="resources/js/jquery-1.10.2.min.js"></script>
 	
@@ -303,9 +302,9 @@
 				  	<td style="width:50%;">
 				  	<h>TotalPage:&nbsp;</h><span id = "totalPage">${totalPage}</span>
 				  	<h>&nbsp;&nbsp;CurrentPage:&nbsp;</h><span id = "currentPage">${currentPage}</span>
-				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&&rthisto=_95rt&${param}&page=1">&nbsp;&nbsp;FirstPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=1">&nbsp;&nbsp;FirstPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	<#if (currentPage-1 >= 1)>
-				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&&rthisto=_95rt&${param}&page=${currentPage-1}">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=${currentPage-1}">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	<#else>
 				  	<a href="javascript:void(0)" disabled = 'true'  style="cursor: default;opacity: 0.6;">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	</#if>
