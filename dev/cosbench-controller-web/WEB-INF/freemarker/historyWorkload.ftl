@@ -83,7 +83,7 @@
 			<div class="content">
 			  
 			  <div>
-				<h3>Archived Workloads  <span class="counter state">${archInfos?size}</span></h3>
+				<h3>Archived Workloads  <span class="counter state">${totalWorkLoad}</span></h3>
 				<p><a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&metrics=t&metrics=succ">view performance matrix</a></p>
 				<p>
 					<#if loadArch == false>
@@ -121,6 +121,28 @@
 				  </#list>
 				</table>
 				</#if>
+				<table class="info-table">
+				<tr>
+				  	<td style="width:50%;"></td>
+				  	<td style="width:50%;">
+				  	<h>TotalPage:&nbsp;</h><span id = "totalPage">${totalPage}</span>
+				  	<h>&nbsp;&nbsp;CurrentPage:&nbsp;</h><span id = "currentPage">${currentPage}</span>
+				  	<a href="historyWorkload.html?loadArch=true&page=1">&nbsp;&nbsp;FirstPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#if (currentPage-1 >= 1)>
+				  	<a href="historyWorkload.html?loadArch=true&page=${currentPage-1}">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#else>
+				  	<a href="javascript:void(0)" disabled = 'true'  style="cursor: default;opacity: 0.6;">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</#if>
+				  	
+				  	<#if (currentPage+1 <= totalPage)>
+				  	<a href="historyWorkload.html?loadArch=true&page=${currentPage+1}">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#else>
+				  	<a href="javascript:void(0)" disabled = 'true' style="cursor: default;opacity: 0.6;">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</#if>
+				  	<a href="historyWorkload.html?loadArch=true&page=${totalPage}">LastPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</td>
+				  </tr>
+				</table>
 				
 				<form id="resubmitForm" method="POST" action="historyWorkload.html">
 					<input id="resubmitIds" type="hidden" name="resubmitIds" value="">

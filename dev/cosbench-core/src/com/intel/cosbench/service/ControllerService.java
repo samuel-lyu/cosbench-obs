@@ -61,4 +61,6 @@ public interface ControllerService {
     
     public void setloadArch(boolean loadArch);
 
+	public WorkloadInfo[] getArchivedWorkloads(String FINISHED);
+
 }

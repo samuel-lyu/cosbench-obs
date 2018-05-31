@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.intel.cosbench.controller.model.*;
 import com.intel.cosbench.log.*;
+import com.intel.cosbench.model.WorkloadInfo;
 import com.intel.cosbench.model.WorkloadState;
 
 /**
@@ -179,5 +180,14 @@ public class RAMWorkloadRepository implements WorkloadRepository,
         String path = stops.getAbsolutePath();
         LOGGER.debug("workload {} has been appened to {}", id, path);
     }
+
+	@Override
+	public synchronized WorkloadInfo[] getArchivedWorkloads(String FINISHED) {
+		List<WorkloadContext> result = new ArrayList<WorkloadContext>();
+        for (WorkloadContext workload : workloads.values())
+            if (workload.getArchived() && workload.getState().name().equals(FINISHED))
+                result.add(workload);
+        return result.toArray(new WorkloadContext[result.size()]);
+	}
 
 }

@@ -18,12 +18,14 @@ limitations under the License.
 package com.intel.cosbench.controller.web;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.http.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.intel.cosbench.model.WorkloadInfo;
 import com.intel.cosbench.service.ControllerService;
 import com.intel.cosbench.web.AbstractController;
 
@@ -35,7 +37,8 @@ import com.intel.cosbench.web.AbstractController;
  */
 public class HistoryWorkloadPageController extends AbstractController {
 
-    private ControllerService controller;
+    private static final int PAGE_SIZE = 20;
+	private ControllerService controller;
 
     public void setController(ControllerService controller) {
         this.controller = controller;
@@ -47,6 +50,15 @@ public class HistoryWorkloadPageController extends AbstractController {
 		ModelAndView result = new ModelAndView("historyWorkload");
 		String resubmitIds = req.getParameter("resubmitIds");
 		String resubmit = req.getParameter("resubmit");
+		Integer page = 1;
+		if(!StringUtils.isEmpty(req.getParameter("page").trim()))
+		{
+			try {
+				page = Integer.valueOf(req.getParameter("page"));
+			} catch (NumberFormatException e) {
+				page = 1;
+			}
+		}
 		String loadArch = req.getParameter("loadArch");
 		if (!StringUtils.isEmpty(resubmit)&&!StringUtils.isEmpty(resubmitIds)){
 			String[] ids = resubmitIds.split("_");
@@ -61,8 +73,24 @@ public class HistoryWorkloadPageController extends AbstractController {
 			controller.setloadArch(false);
 		
         result.addObject("hInfos", controller.getHistoryWorkloads());
-        result.addObject("archInfos", controller.getArchivedWorkloads());
+        
+        WorkloadInfo[] workloads = controller.getArchivedWorkloads();
+        int totalPage = workloads.length/PAGE_SIZE + (workloads.length%PAGE_SIZE ==0 ? 0:1);
+        if(page < 1)
+		{
+			page = 1;
+		}else if(page > totalPage)
+		{
+			page = totalPage;
+		}
+        int start = (page-1)*PAGE_SIZE;
+        int end = page*PAGE_SIZE >= workloads.length? workloads.length : page*PAGE_SIZE ;
+        WorkloadInfo[] returnWorkloads =Arrays.copyOfRange(workloads, start, end);
+        result.addObject("archInfos", returnWorkloads);
         result.addObject("loadArch", controller.getloadArch());
+        result.addObject("totalPage",totalPage);
+        result.addObject("currentPage",page);
+        result.addObject("totalWorkLoad",workloads.length);
 		return result;
 	}
 }

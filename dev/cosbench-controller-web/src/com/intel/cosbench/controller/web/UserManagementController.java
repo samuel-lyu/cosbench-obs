@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.servlet.http.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.intel.cosbench.controller.entity.User;
@@ -41,6 +42,7 @@ public class UserManagementController extends AbstractController {
 
     private ControllerService controller;
 
+    private static final int PAGE_SIZE = 5;
     public void setController(ControllerService controller) {
         this.controller = controller;
     }
@@ -55,9 +57,19 @@ public class UserManagementController extends AbstractController {
     	ModelAndView result = new ModelAndView("userManagement");
     	List<User> allUsers = new ArrayList<User>();
 		readUserFromExcel(allUsers);
-    	result.addObject("users", allUsers);
-    	return result;
+		Integer page = 1;
+		if(!StringUtils.isEmpty(req.getParameter("page").trim()))
+		{
+			try {
+				page = Integer.valueOf(req.getParameter("page"));
+			} catch (NumberFormatException e) {
+				page = 1;
+			}
+		}
+    	return UserPage.page(result, allUsers, page);
 	}
+
+	
     
     public void readUserFromExcel(List<User> allUsers) {  
         try {  

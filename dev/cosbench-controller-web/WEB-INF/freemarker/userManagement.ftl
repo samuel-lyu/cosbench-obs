@@ -72,7 +72,7 @@
 			<div class="top"><br /></div>
 			<div class="content">
 			    
-			  <h3>All users<span class="counter state">${users?size}</span></h3>
+			  <h3>All users<span class="counter state">${totalUsers}</span></h3>
 			  <div>
 				<table class="info-table">
 				  <tr>
@@ -97,7 +97,29 @@
 				  </#list>
 				</table>
 			  </div>
-			  
+			  <table class="info-table">
+				<tr>
+				  	<td style="width:50%;"></td>
+				  	<td style="width:50%;">
+				  	<h>TotalPage:&nbsp;</h><span id = "totalPage">${totalPage}</span>
+				  	<h>&nbsp;&nbsp;CurrentPage:&nbsp;</h><span id = "currentPage">${currentPage}</span>
+				  	<a href="userManagement.html?page=1">&nbsp;&nbsp;FirstPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#if (currentPage-1 >= 1)>
+				  	<a href="userManagement.html?page=${currentPage-1}">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#else>
+				  	<a href="javascript:void(0)" disabled = 'true'  style="cursor: default;opacity: 0.6;">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</#if>
+				  	
+				  	<#if (currentPage+1 <= totalPage)>
+				  	<a href="userManagement.html?page=${currentPage+1}">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#else>
+				  	<a href="javascript:void(0)" disabled = 'true' style="cursor: default;opacity: 0.6;">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</#if>
+				  	<a href="userManagement.html?page=${totalPage}">LastPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</td>
+				  </tr>
+				</table>
+				
 			  <p style="margin-bottom:0px">
 			  	<a class="label" href="download-userTemplet.do" style="text-align:left;display:inline-block;margin:10px 0px;">download-templet</a>
 			  </p>

@@ -18,9 +18,11 @@ limitations under the License.
 package com.intel.cosbench.controller.web;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.http.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.intel.cosbench.model.WorkloadInfo;
@@ -30,6 +32,7 @@ import com.intel.cosbench.web.AbstractController;
 public class MatrixPageController extends AbstractController {
 
     private ControllerService controller;
+    private static final int PAGE_SIZE = 20;
 
     public void setController(ControllerService controller) {
         this.controller = controller;
@@ -38,6 +41,16 @@ public class MatrixPageController extends AbstractController {
     @Override
     protected ModelAndView process(HttpServletRequest req,
             HttpServletResponse res) throws Exception {
+    	WorkloadInfo[] workloads = null;
+    	Integer page = 1;
+		if(!StringUtils.isEmpty(req.getParameter("page").trim()))
+		{
+			try {
+				page = Integer.valueOf(req.getParameter("page"));
+			} catch (NumberFormatException e) {
+				page = 1;
+			}
+		}
         ModelAndView result = new ModelAndView("matrix");
         controller.setloadArch(true);
         String[] ops = req.getParameterValues("ops");
@@ -47,9 +60,13 @@ public class MatrixPageController extends AbstractController {
         else
             result.addObject("allOps", true);
         String[] metrics = req.getParameterValues("metrics");
-        if (metrics != null && metrics.length > 0)
-            for (String metric : metrics)
+        StringBuffer buffer = new StringBuffer();
+        if (metrics != null && metrics.length > 0) {
+            for (String metric : metrics) {
+            	buffer.append("metrics=").append(metric).append("&");
                 result.addObject(metric, true);
+            }
+        }
         else
             result.addObject("allMetrics", true);
         String[] rthistos = req.getParameterValues("rthisto");
@@ -58,8 +75,15 @@ public class MatrixPageController extends AbstractController {
                 result.addObject(rthisto, true);
         String[] others = req.getParameterValues("others");
         if (others != null && others.length > 0)
+        {
             for (String other : others)
-                result.addObject(other, true);
+            {
+            	result.addObject(other, true);
+            	buffer.append("others=").append(other).append("&");
+            }
+        }
+        String param = buffer.toString().substring(0,buffer.toString().lastIndexOf("&"));
+        result.addObject("param", param);
         if(req.getParameter("type").equals("histo"))
         	result.addObject("hInfos", controller.getHistoryWorkloads());
         else if (req.getParameter("type").equals("arch")) {
@@ -72,9 +96,24 @@ public class MatrixPageController extends AbstractController {
         			}
         		}
         	}
-        	result.addObject("hInfos", controller.getArchivedWorkloads());
+        	workloads = controller.getArchivedWorkloads("FINISHED");
         }
+        int totalPage = workloads.length/PAGE_SIZE + (workloads.length%PAGE_SIZE ==0 ? 0:1);
+        if(page < 1)
+		{
+			page = 1;
+		}else if(page > totalPage)
+		{
+			page = totalPage;
+		}
+        int start = (page-1)*PAGE_SIZE;
+        int end = page*PAGE_SIZE >= workloads.length? workloads.length : page*PAGE_SIZE ;
+        WorkloadInfo[] returnWorkloads =Arrays.copyOfRange(workloads, start, end);
+        result.addObject("hInfos", returnWorkloads);
         result.addObject("type", req.getParameter("type"));
+        result.addObject("totalPage",totalPage);
+        result.addObject("currentPage",page);
+        result.addObject("totalWorkLoad",workloads.length);
         
         return result;
     }

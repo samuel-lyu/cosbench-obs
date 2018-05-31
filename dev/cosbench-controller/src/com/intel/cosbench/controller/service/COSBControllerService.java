@@ -386,4 +386,9 @@ class COSBControllerService implements ControllerService, WorkloadListener {
         return archiver.getWorkloadConfig(info);
     }
 
+	@Override
+	public WorkloadInfo[] getArchivedWorkloads(String FINISHED) {
+		return memRepo.getArchivedWorkloads(FINISHED);
+	}
+
 }

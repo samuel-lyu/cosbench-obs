@@ -18,6 +18,7 @@ limitations under the License.
 package com.intel.cosbench.controller.repository;
 
 import com.intel.cosbench.controller.model.WorkloadContext;
+import com.intel.cosbench.model.WorkloadInfo;
 
 public interface WorkloadRepository {
 
@@ -38,5 +39,7 @@ public interface WorkloadRepository {
     public WorkloadContext[] getArchivedWorkloads();
     
     public int getMaxCapacity();
+
+	public WorkloadInfo[] getArchivedWorkloads(String FINISHED);
 
 }

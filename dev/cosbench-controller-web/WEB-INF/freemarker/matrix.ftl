@@ -297,10 +297,32 @@
 			  </#list>
 			</#list>
 		  </table>
+		  <table class="info-table">
+				<tr>
+				  	<td style="width:50%;"></td>
+				  	<td style="width:50%;">
+				  	<h>TotalPage:&nbsp;</h><span id = "totalPage">${totalPage}</span>
+				  	<h>&nbsp;&nbsp;CurrentPage:&nbsp;</h><span id = "currentPage">${currentPage}</span>
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&&rthisto=_95rt&${param}&page=1">&nbsp;&nbsp;FirstPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#if (currentPage-1 >= 1)>
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&&rthisto=_95rt&${param}&page=${currentPage-1}">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#else>
+				  	<a href="javascript:void(0)" disabled = 'true'  style="cursor: default;opacity: 0.6;">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</#if>
+				  	
+				  	<#if (currentPage+1 <= totalPage)>
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=${currentPage+1}">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<#else>
+				  	<a href="javascript:void(0)" disabled = 'true' style="cursor: default;opacity: 0.6;">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</#if>
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=${totalPage}">LastPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	</td>
+				  </tr>
+				</table>
 		  <p>
-			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&others=cfg">show RT only</a>
-			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=t&others=cfg">show T only</a>
-			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=bw&others=cfg">show BW only</a>
+			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=rt&rthisto=_95rt&others=cfg&page=${currentPage}">show RT only</a>
+			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=t&others=cfg&page=${currentPage}">show T only</a>
+			<a href="matrix.html?type=${type}&ops=read&ops=write&ops=delete&metrics=bw&others=cfg&page=${currentPage}">show BW only</a>
 		  </p>
 		</div> <#-- end of content -->
 		<div class="bottom"><br /></div>
