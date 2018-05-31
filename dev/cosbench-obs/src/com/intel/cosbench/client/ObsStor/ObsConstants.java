@@ -24,14 +24,14 @@ public interface ObsConstants {
     String AUTH_PASSWORD_DEFAULT = "";
     
     // --------------------------------------------------------------------------
-    // LINK_WAY ADN LINKTIME
+    // HTTPSONLY ADN LONGCONNECTION
     // --------------------------------------------------------------------------
     
-    String LINK_WAY_KEY = "linkWay";
-    String LINK_WAY_DEFAULT = "https";
+    String HTTPS_ONLY_KEY = "httpsOnly";
+    String HTTPS_ONLY_DEFAULT = "true";
     
-    String LINK_TIME_KEY = "linkTime";
-    String LINK_TIME_DEFAULT = "long";
+    String LONG_CONNECTION_KEY = "longConnection";
+    String LONG_CONNECTION_DEFAULT = "true";
     
     // --------------------------------------------------------------------------
     // CLIENT CONFIGURATION

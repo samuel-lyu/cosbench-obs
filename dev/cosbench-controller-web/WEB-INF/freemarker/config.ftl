@@ -83,9 +83,9 @@
 										<th ><strong>Type</strong></a> </th>
 										<th ><strong>User</strong></a> </th>
 										<th ></strong>URL</strong></a> </th>
-										<th title="Select the HTTP and HTTPS links between driver and storage."><strong>LinkWay</strong></a> </th>
+										<th title="Select the HTTP and HTTPS links between driver and storage."><strong>HttpsOnly</strong></a> </th>
 										<th title="Select V2 or V4 authentication methods of obsStorage" style="display:none"><strong>V2/V4</strong></a> </th>
-										<th title="Choose the connection mode between driver and storage, including long connection and short connection."><strong>LinkTime</strong></a> </th>
+										<th title="Choose the connection mode between driver and storage, including long connection and short connection."><strong>LongConnection</strong></a> </th>
 									</tr>
 								</thead>
 								<tbody>
@@ -152,10 +152,10 @@
 												title="different storage system has different parameters: &#10 [swift]:  &#10 [ampli]: host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id> &#10; [mock]: delay=<time>;&#10 [none]: " /> 
 										</td>
 										<td >
-											<select name="storage.linkWay" id="storage.linkWay">
+											<select name="storage.httpsOnly" id="storage.httpsOnly">
 											  <option value="none">none</option>
-											  <option value="https" selected="true">https</option>
-											  <option value="http">http</option>
+											  <option value="true" selected="true">true</option>
+											  <option value="false">false</option>
 											</select>
 										</td>
 										<td style="display:none">
@@ -166,10 +166,10 @@
 											</select>
 										</td>
 										<td >
-											<select name="storage.linkTime" id="storage.linkTime">
+											<select name="storage.longConnection" id="storage.longConnection">
 											  <option value="none">none</option>
-											  <option value="longLink" selected="true">long</option>
-											  <option value="shortLink">short</option>
+											  <option value="true" selected="true">true</option>
+											  <option value="false">false</option>
 											</select>
 										</td>
 									</tr>
@@ -823,9 +823,9 @@
 		var selected=select.options[select.selectedIndex].value;
 		var config=document.getElementById("storage.url");
     	var userSelect=document.getElementById("storage.user");
-    	var linkWaySelect=document.getElementById("storage.linkWay");
+    	var httpsOnlySelect=document.getElementById("storage.httpsOnly");
     	var v2v4Select=document.getElementById("storage.v2v4");
-    	var linkTimeSelect=document.getElementById("storage.linkTime");
+    	var longConnectionSelect=document.getElementById("storage.longConnection");
 		
 		switch(selected)
 		{
@@ -833,49 +833,49 @@
 				config.value="";
 				config.title="";
 				userSelect.options[1].selected = true;
-				linkWaySelect.options[0].selected = true;
+				httpsOnlySelect.options[0].selected = true;
 				v2v4Select.options[0].selected = true;
-				linkTimeSelect.options[0].selected = true;
+				longConnectionSelect.options[0].selected = true;
 				break;
 			case "s3":
 				config.value="proxyhost=<proxyhost>;proxyport=<proxyport>;endpoint=<endpoint>";
 				config.title="where proxyhost, proxyport and endpoint are optional.";
 				userSelect.options[1].selected = true;
-				linkWaySelect.options[0].selected = true;
+				httpsOnlySelect.options[0].selected = true;
 				v2v4Select.options[0].selected = true;
-				linkTimeSelect.options[0].selected = true;
+				longConnectionSelect.options[0].selected = true;
 				break;
 			case "obs":
 				config.value="proxyhost=<proxyhost>;proxyport=<proxyport>;endpoint=<endpoint>";
 				config.title="where proxyhost, proxyport and endpoint are optional.";
 				userSelect.options[1].selected = true;
-				linkWaySelect.options[1].selected = true;
+				httpsOnlySelect.options[1].selected = true;
 				v2v4Select.options[1].selected = true;
-				linkTimeSelect.options[1].selected = true;
+				longConnectionSelect.options[1].selected = true;
 				break;
 			case "mock":
 				config.value="delay=<delay>;size=<object size>;errors=<error rate>;printing=<true|false>;profiling=<true|false>";
 				config.title="The storage type is specially used for self-test and demo only, no storage target is required."
 				userSelect.options[1].selected = true;
-				linkWaySelect.options[0].selected = true;
+				httpsOnlySelect.options[0].selected = true;
 				v2v4Select.options[0].selected = true;
-				linkTimeSelect.options[0].selected = true;
+				longConnectionSelect.options[0].selected = true;
 				break;
 			case "none":
 				config.value="";
 				config.title="The storage type is specially used to evaluate the program itself's overhead, especially at high volumes.";
 				userSelect.options[0].selected = true;
-				linkWaySelect.options[0].selected = true;
+				httpsOnlySelect.options[0].selected = true;
 				v2v4Select.options[0].selected = true;
-				linkTimeSelect.options[0].selected = true;
+				longConnectionSelect.options[0].selected = true;
 				break;	
 			default:
 				config.value="";
 				config.title="";
 				userSelect.options[1].selected = true;
-				linkWaySelect.options[0].selected = true;
+				httpsOnlySelect.options[0].selected = true;
 				v2v4Select.options[0].selected = true;
-				linkTimeSelect.options[0].selected = true;
+				longConnectionSelect.options[0].selected = true;
 		}		
 	}
  </script>

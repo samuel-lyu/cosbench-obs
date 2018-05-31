@@ -201,6 +201,11 @@ public class TimelinePageController extends StagePageController {
 		}
 		for (int i = 0; i < snapshots.length; i++) {
 			Metrics[] metrics = snapshots[i].getReport().getAllMetrics();
+			if (metricsNameList.size() > 0 && metrics.length == 0) {
+				for (int j = 0; j < metricsNameList.size(); j++) {
+					metricsDataList.add("0.00");
+				}
+			}
 			for (int j = 0; j < metrics.length; j++) {
 				DecimalFormat df = new DecimalFormat("#.00");
 				if (metricName.equals("throughput")) {

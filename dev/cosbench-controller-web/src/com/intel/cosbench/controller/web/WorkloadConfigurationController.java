@@ -564,17 +564,17 @@ public class WorkloadConfigurationController extends AbstractController {
 		if (!storageType.equalsIgnoreCase("none") && !StringUtils.isEmpty(storageUrlConfig)) {
 			String storageUserConfig = getParm(req, "storage.user");
 			storageConfig = storageUserConfig + ";" + storageUrlConfig;
-			String storageLinkWay = getParm(req, "storage.linkWay");
-			if (!storageLinkWay.equalsIgnoreCase("none")) {
-				storageConfig = storageConfig + ";linkWay=" + storageLinkWay;
+			String storageHttpsOnly = getParm(req, "storage.httpsOnly");
+			if (!storageHttpsOnly.equalsIgnoreCase("none")) {
+				storageConfig = storageConfig + ";httpsOnly=" + storageHttpsOnly;
 			}
 			String storageV2v4 = getParm(req, "storage.v2v4");
 			if (!storageV2v4.equalsIgnoreCase("none")) {
 				storageConfig = storageConfig + ";v2v4=" + storageV2v4;
 			}
-			String storageLinkTime = getParm(req, "storage.linkTime");
-			if (!storageLinkTime.equalsIgnoreCase("none")) {
-				storageConfig = storageConfig + ";linkTime=" + storageLinkTime;
+			String storageLongConnection = getParm(req, "storage.longConnection");
+			if (!storageLongConnection.equalsIgnoreCase("none")) {
+				storageConfig = storageConfig + ";longConnection=" + storageLongConnection;
 			}
 		}
 		LOGGER.debug("The storageConfig of the workload {} is {}", name, storageConfig);
