@@ -302,19 +302,19 @@
 				  	<td style="width:50%;">
 				  	<h>TotalPage:&nbsp;</h><span id = "totalPage">${totalPage}</span>
 				  	<h>&nbsp;&nbsp;CurrentPage:&nbsp;</h><span id = "currentPage">${currentPage}</span>
-				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=1">&nbsp;&nbsp;FirstPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&${param}&page=1">&nbsp;&nbsp;FirstPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	<#if (currentPage-1 >= 1)>
-				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=${currentPage-1}">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&${param}&page=${currentPage-1}">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	<#else>
 				  	<a href="javascript:void(0)" disabled = 'true'  style="cursor: default;opacity: 0.6;">Previous</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	</#if>
 				  	
 				  	<#if (currentPage+1 <= totalPage)>
-				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=${currentPage+1}">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&${param}&page=${currentPage+1}">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	<#else>
 				  	<a href="javascript:void(0)" disabled = 'true' style="cursor: default;opacity: 0.6;">Next</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	</#if>
-				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&rthisto=_95rt&${param}&page=${totalPage}">LastPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
+				  	<a href="matrix.html?type=arch&ops=read&ops=write&ops=delete&${param}&page=${totalPage}">LastPage</a>&nbsp;&nbsp;&nbsp;&nbsp;
 				  	</td>
 				  </tr>
 				</table>

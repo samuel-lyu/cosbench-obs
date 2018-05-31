@@ -22,7 +22,6 @@ import java.util.Arrays;
 
 import javax.servlet.http.*;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.intel.cosbench.model.WorkloadInfo;
@@ -42,15 +41,7 @@ public class MatrixPageController extends AbstractController {
     protected ModelAndView process(HttpServletRequest req,
             HttpServletResponse res) throws Exception {
     	WorkloadInfo[] workloads = null;
-    	Integer page = 1;
-		if(!StringUtils.isEmpty(req.getParameter("page").trim()))
-		{
-			try {
-				page = Integer.valueOf(req.getParameter("page"));
-			} catch (NumberFormatException e) {
-				page = 1;
-			}
-		}
+    	Integer page = PageUtil.getPageParam(req);
         ModelAndView result = new ModelAndView("matrix");
         controller.setloadArch(true);
         String[] ops = req.getParameterValues("ops");
@@ -71,8 +62,13 @@ public class MatrixPageController extends AbstractController {
             result.addObject("allMetrics", true);
         String[] rthistos = req.getParameterValues("rthisto");
         if (rthistos != null && rthistos.length > 0)
-            for (String rthisto : rthistos)
-                result.addObject(rthisto, true);
+        {
+        	for (String rthisto : rthistos)
+        	{
+        		result.addObject(rthisto, true);
+        		buffer.append("rthisto=").append(rthisto).append("&");
+        	}
+        }
         String[] others = req.getParameterValues("others");
         if (others != null && others.length > 0)
         {
@@ -118,4 +114,5 @@ public class MatrixPageController extends AbstractController {
         return result;
     }
 
+	
 }

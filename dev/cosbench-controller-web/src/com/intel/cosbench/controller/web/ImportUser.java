@@ -28,7 +28,6 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.*;
 import com.intel.cosbench.controller.entity.User;
 import com.intel.cosbench.web.BadRequestException;
@@ -48,8 +47,7 @@ public class ImportUser extends UserManagementController {
     	List<User> allUsers = new ArrayList<User>();
     	writeUser2Excel(req);
 		readUserFromExcel(allUsers);
-		Integer page = 1;
-		return UserPage.page(result, allUsers, page);
+		return UserPage.page(result, allUsers, 1);
 	}
 	
     public void writeUser2Excel(HttpServletRequest req) 
