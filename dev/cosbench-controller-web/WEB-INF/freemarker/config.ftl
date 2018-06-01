@@ -81,10 +81,10 @@
 									<tr>
 										<th ><strong></strong> </th>
 										<th ><strong>Type</strong></a> </th>
-										<th ><strong>User</strong></a> </th>
+										<th ><strong>UserType</strong></a> </th>
+										<th ><strong>Name</strong></a> </th>
 										<th ></strong>URL</strong></a> </th>
 										<th title="Select the HTTP and HTTPS links between driver and storage."><strong>HttpsOnly</strong></a> </th>
-										<th title="Select V2 or V4 authentication methods of obsStorage" style="display:none"><strong>V2/V4</strong></a> </th>
 										<th title="Choose the connection mode between driver and storage, including long connection and short connection."><strong>LongConnection</strong></a> </th>
 									</tr>
 								</thead>
@@ -101,15 +101,17 @@
 											</select>
 										</td>
 										<td >
-											<select name="auth.user" id="auth.user">
-												<option value="none" selected="true">none</option>
-												<#list userGroupList as userGroup>
-													<option value=userGroup:${userGroup}>userGroup:${userGroup}</option>
-												</#list>
-												<#list userList as user>
-													<option value=user:${user}>user:${user}</option>
-												</#list>
+											<select name="auth.userType" id="auth.userType" onchange="setUserOption('auth.userType', 'auth.user', 'auth.toInputUserBox')">
+												<option value="none">none</option>
+												<option value="userGroup">Group</option>
+												<option value="user">User</option>
 											</select>
+										</td>
+										<td >
+											<select name="auth.user" id="auth.user" onchange="changeInput('auth.user', 'auth.toInputUserBox')">
+												<option value="none" selected="true">none</option>
+											</select>
+											<input id="auth.toInputUserBox" type="text" onchange="inputCascadedUsers('auth.toInputUserBox', 'auth.user')"/>
 										</td>
 										<td >
 											<input name="auth.url" id="auth.url" type="text" style="width:360px" value="" 
@@ -133,22 +135,22 @@
 											</select>
 										</td>
 										<td >
-											<select name="storage.user" id="storage.user">
+											<select name="storage.userType" id="storage.userType" onchange="setUserOption('storage.userType', 'storage.user', 'storage.toInputUserBox')">
 												<option value="none">none</option>
-												<#list userGroupList as userGroup>
-													<#if userGroup_index = 0>
-														<option value=userGroup:${userGroup} selected="true">userGroup:${userGroup}</option>
-													<#else>
-														<option value=userGroup:${userGroup}>userGroup:${userGroup}</option>
-													</#if>
-												</#list>
-												<#list userList as user>
-													<option value=user:${user}>user:${user}</option>
-												</#list>
+												<option value="userGroup" selected="true">group</option>
+												<option value="user">user</option>
 											</select>
 										</td>
 										<td >
-											<input name="storage.url" id="storage.url" type="text" style="width:360px" value=""
+											<select name="storage.user" id="storage.user" onchange="changeInput('storage.user', 'storage.toInputUserBox')">
+												<#list userGroupList as userGroup>
+													<option value=userGroup:${userGroup}>${userGroup}</option>
+												</#list>
+											</select>
+											<input id="storage.toInputUserBox" type="text" onchange="inputCascadedUsers('storage.toInputUserBox', 'storage.user')"/>  
+										</td>
+										<td >
+											<input name="storage.url" id="storage.url" type="text" style="width:360px" value="endpoint=<endpoint>"
 												title="different storage system has different parameters: &#10 [swift]:  &#10 [ampli]: host=<host>;port=<port>;nsroot=<namespace root>;policy=<policy id> &#10; [mock]: delay=<time>;&#10 [none]: " /> 
 										</td>
 										<td >
@@ -156,13 +158,6 @@
 											  <option value="none">none</option>
 											  <option value="true" selected="true">true</option>
 											  <option value="false">false</option>
-											</select>
-										</td>
-										<td style="display:none">
-											<select name="storage.v2v4" id="storage.v2v4">
-											  <option value="none">none</option>
-											  <option value="V2" selected="true">V2</option>
-											  <option value="V4">V4</option>
 											</select>
 										</td>
 										<td >
@@ -463,23 +458,22 @@
 													</select>										
 												</td>
 												<td>
-													<select name="write.partsizeName">
+													<select name="write.partsizeName" id="write.partsizeName" onchange="hideOrShowElement('write.partsizeName', 'partSizeP')">
 													  <option value="none" title="none" selected="true">none</option>
 													  <option value="partSize" title="partSize">part</option>
 													</select>
-													<select name="write.partsize">
-													  <option value="r" title="Range">r</option>
-													  <option value="s" title="sequential">s</option>
-													  <option value="u" title="uniform">u</option>
-													  <option value="c" selected="true" title="constant">c</option>
-													</select>
-													<input type="number" name="write.partsize.min" style="width:30px" value="64"/> - <input type="number" name="write.partsize.max" style="width:30px" value="64"/>
-													<select name="write.partsize.unit">
-													  <option value="B">Byte</option>
-													  <option value="KB" selected="true">KB</option>
-													  <option value="MB">MB</option>
-													  <option value="GB">GB</option>
-													</select>	
+													<p id="partSizeP" style="display:none">
+														<select name="write.partsize">
+														  <option value="c" selected="true" title="constant">c</option>
+														</select>
+														<input type="number" name="write.partsize.min" style="width:30px" value="64"/><span style="display:none"> - <input type="number" name="write.partsize.max" style="width:30px" value="64"/></span>
+														<select name="write.partsize.unit">
+														  <option value="B">Byte</option>
+														  <option value="KB" selected="true">KB</option>
+														  <option value="MB">MB</option>
+														  <option value="GB">GB</option>
+														</select>	
+													</p>
 												</td>															
 											</tr>
 											<tr>                                        
@@ -529,18 +523,16 @@
 												</td>
 												<td></td>
 												<td>
-													<select name="delete.batchName">
+													<select id="delete.batchName" name="delete.batchName" onchange="hideOrShowElement('delete.batchName', 'batchP')">
 													  <option value="none" title="none" selected="true">none</option>
 													  <option value="batch" title="batch">batch</option>
 													</select>
-													<select name="delete.batch">
-													  <option value="r" title="Range">r</option>
-													  <option value="s" title="sequential">s</option>
-													  <option value="u" title="uniform">u</option>
-													  <option value="c" selected="true" title="constant">c</option>
-													</select>
-													<input type="number" name="delete.batch.min" style="width:30px" value="16"/> - <input type="number" name="delete.batch.max" style="width:30px" value="16"/> 
-												
+													<p id="batchP" style="display:none">
+														<select name="delete.batch">
+														  <option value="c" title="constant">c</option>
+														</select>
+														<input type="number" name="delete.batch.min" style="width:30px" value="16"/><span style="display:none"> - <input type="number" name="delete.batch.max" style="width:30px" value="16"/></span> 
+													</p>
 												</td>
 																											
 											</tr>
@@ -784,36 +776,43 @@
     	var select=document.getElementById("auth.type");
 		var selected=select.options[select.selectedIndex].value;
 		var config=document.getElementById("auth.url");
-		var userSelect=document.getElementById("auth.user");
+		var userTypeSelect=document.getElementById("auth.userType");
+		var userNameSelect=document.getElementById("auth.user");
 		
 		switch(selected)
 		{
 			case "swauth":
 				config.value="auth_url=<url>";
 				config.title="username=test:tester;password=testing;auth_url=http://192.168.0.1:8080/auth/v1.0";
-				userSelect.options[1].selected = true;
+				userTypeSelect.options[1].selected = true;
+				setUserOption('auth.userType', 'auth.user', 'auth.toInputUserBox');
 				break;
 			case "keystone":
 				config.value="auth_url=<url>;service=<service>";
 				config.title="username=tester;password=testing;tenant_name=test;auth_url=http://127.0.0.1:5000/v2.0;service=swift service";
-				userSelect.options[1].selected = true;
+				userTypeSelect.options[1].selected = true;
+				setUserOption('auth.userType', 'auth.user', 'auth.toInputUserBox');
 				break;
 			case "httpauth":
 				config.value="auth_url=<url>";
 				config.title="username=tester;password=testing;auth_url=http://192.168.10.1:8080/cdmi";
-				userSelect.options[1].selected = true;
+				userTypeSelect.options[1].selected = true;
+				setUserOption('auth.userType', 'auth.user', 'auth.toInputUserBox');
 				break;
 			case "mock":
 				config.value="delay=<time>";
-				userSelect.options[0].selected = true;
+				userTypeSelect.options[0].selected = true;
+				setUserOption('auth.userType', 'auth.user', 'auth.toInputUserBox');
 				break;		
 			case "none":
 				config.value="";
-				userSelect.options[0].selected = true;
+				userTypeSelect.options[0].selected = true;
+				setUserOption('auth.userType', 'auth.user', 'auth.toInputUserBox');
 				break;	
 			default:
 				config.value="";
-				userSelect.options[0].selected = true;
+				userTypeSelect.options[0].selected = true;
+				setUserOption('auth.userType', 'auth.user', 'auth.toInputUserBox');
 		}				
     }
     
@@ -822,9 +821,8 @@
     	var select=document.getElementById("storage.type");
 		var selected=select.options[select.selectedIndex].value;
 		var config=document.getElementById("storage.url");
-    	var userSelect=document.getElementById("storage.user");
+    	var userTypeSelect=document.getElementById("storage.userType");
     	var httpsOnlySelect=document.getElementById("storage.httpsOnly");
-    	var v2v4Select=document.getElementById("storage.v2v4");
     	var longConnectionSelect=document.getElementById("storage.longConnection");
 		
 		switch(selected)
@@ -832,51 +830,129 @@
 			case "swift":
 				config.value="";
 				config.title="";
-				userSelect.options[1].selected = true;
+				userTypeSelect.options[1].selected = true;
+				setUserOption('storage.userType', 'storage.user', 'storage.toInputUserBox');
 				httpsOnlySelect.options[0].selected = true;
-				v2v4Select.options[0].selected = true;
+				httpsOnlySelect.style.display = 'none';
 				longConnectionSelect.options[0].selected = true;
+				longConnectionSelect.style.display = 'none';
 				break;
 			case "s3":
 				config.value="proxyhost=<proxyhost>;proxyport=<proxyport>;endpoint=<endpoint>";
 				config.title="where proxyhost, proxyport and endpoint are optional.";
-				userSelect.options[1].selected = true;
-				httpsOnlySelect.options[0].selected = true;
-				v2v4Select.options[0].selected = true;
-				longConnectionSelect.options[0].selected = true;
+				userTypeSelect.options[1].selected = true;
+				setUserOption('storage.userType', 'storage.user', 'storage.toInputUserBox');
+				httpsOnlySelect.options[1].selected = true;
+				httpsOnlySelect.style.display = 'inline';
+				longConnectionSelect.options[1].selected = true;
+				longConnectionSelect.style.display = 'inline';
 				break;
 			case "obs":
-				config.value="proxyhost=<proxyhost>;proxyport=<proxyport>;endpoint=<endpoint>";
-				config.title="where proxyhost, proxyport and endpoint are optional.";
-				userSelect.options[1].selected = true;
+				config.value="endpoint=<endpoint>";
+				config.title="where proxyhost and proxyport are optional.";
+				userTypeSelect.options[1].selected = true;
+				setUserOption('storage.userType', 'storage.user', 'storage.toInputUserBox');
 				httpsOnlySelect.options[1].selected = true;
-				v2v4Select.options[1].selected = true;
+				httpsOnlySelect.style.display = 'inline';
 				longConnectionSelect.options[1].selected = true;
+				longConnectionSelect.style.display = 'inline';
 				break;
 			case "mock":
 				config.value="delay=<delay>;size=<object size>;errors=<error rate>;printing=<true|false>;profiling=<true|false>";
 				config.title="The storage type is specially used for self-test and demo only, no storage target is required."
-				userSelect.options[1].selected = true;
+				userTypeSelect.options[0].selected = true;
+				setUserOption('storage.userType', 'storage.user', 'storage.toInputUserBox');
 				httpsOnlySelect.options[0].selected = true;
-				v2v4Select.options[0].selected = true;
+				httpsOnlySelect.style.display = 'none';
 				longConnectionSelect.options[0].selected = true;
+				longConnectionSelect.style.display = 'none';
 				break;
 			case "none":
 				config.value="";
 				config.title="The storage type is specially used to evaluate the program itself's overhead, especially at high volumes.";
-				userSelect.options[0].selected = true;
+				userTypeSelect.options[0].selected = true;
+				setUserOption('storage.userType', 'storage.user', 'storage.toInputUserBox');
 				httpsOnlySelect.options[0].selected = true;
-				v2v4Select.options[0].selected = true;
+				httpsOnlySelect.style.display = 'none';
 				longConnectionSelect.options[0].selected = true;
+				longConnectionSelect.style.display = 'none';
 				break;	
 			default:
 				config.value="";
 				config.title="";
-				userSelect.options[1].selected = true;
+				userTypeSelect.options[1].selected = true;
+				setUserOption('storage.userType', 'storage.user', 'storage.toInputUserBox');
 				httpsOnlySelect.options[0].selected = true;
-				v2v4Select.options[0].selected = true;
+				httpsOnlySelect.style.display = 'none';
 				longConnectionSelect.options[0].selected = true;
+				longConnectionSelect.style.display = 'none';
 		}		
+	}
+	
+	function setUserOption(typeId, userSelectorId, toInputUserBoxId)
+	{
+		var type = document.getElementById(typeId);
+		var userSelctor = document.getElementById(userSelectorId);
+		var userType = type.value;
+		userSelctor.options.length = 0;
+		if (userType == 'userGroup') 
+		{
+			<#list userGroupList as userGroup>
+				userSelctor.options.add(new Option("${userGroup}","userGroup:${userGroup}")); 
+			</#list>
+		} else if (userType == 'user')
+		{
+			<#list userList as user>
+				userSelctor.options.add(new Option("${user}","user:${user}")); 
+			</#list>
+		} else if (userType == 'none')
+		{
+			userSelctor.options.add(new Option("none","none")); 
+		}
+		changeInput(userSelectorId, toInputUserBoxId);
+	}
+	
+	changeInput('storage.user', 'storage.toInputUserBox');
+	changeInput('auth.user', 'auth.toInputUserBox');
+	function changeInput(triggerElementId, toInputUserBoxId)
+	{
+		var triggerElement = document.getElementById(triggerElementId);
+		var toInputUserBox = document.getElementById(toInputUserBoxId);
+		var triggerWidth = triggerElement.offsetWidth;
+		var triggerHeight = triggerElement.offsetHeight;
+		toInputUserBox.style.width = (triggerWidth - 18) + 'px';
+		toInputUserBox.style.height = triggerHeight + 'px';
+		toInputUserBox.style.marginLeft = (0 - triggerWidth - 5) + 'px';
+		toInputUserBox.value = triggerElement.options[triggerElement.selectedIndex].text;
+	}
+	function inputCascadedUsers(triggerElementId, toChangeShowingUserBoxId)
+	{
+		var triggerElement = document.getElementById(triggerElementId);
+		var fuzzySearchValue = triggerElement.value;
+		var toChangeShowingUserBox = document.getElementById(toChangeShowingUserBoxId);
+		var items = toChangeShowingUserBox.options;
+		for (i=0; i < items.length; i++)
+		{
+			if (items[i].value.indexOf(fuzzySearchValue) != -1) 
+			{
+				items[i].style.display = 'inline';
+			} else {
+				items[i].style.display = 'none';
+			}
+		}
+	}
+	
+	function hideOrShowElement(triggerElement, elementId) 
+	{
+		var triggerElement = document.getElementById(triggerElement);
+		var toOperateElement = document.getElementById(elementId);
+		if (triggerElement.options[triggerElement.selectedIndex].value == 'none') 
+		{
+			toOperateElement.style.display = 'none';
+		} else {
+			toOperateElement.style.display = 'inline';
+		}
+		
 	}
  </script>
 	<script src="resources/js/bootstrap.min.js"></script>

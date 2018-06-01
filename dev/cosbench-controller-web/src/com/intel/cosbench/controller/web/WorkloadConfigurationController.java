@@ -568,10 +568,6 @@ public class WorkloadConfigurationController extends AbstractController {
 			if (!storageHttpsOnly.equalsIgnoreCase("none")) {
 				storageConfig = storageConfig + ";httpsOnly=" + storageHttpsOnly;
 			}
-			String storageV2v4 = getParm(req, "storage.v2v4");
-			if (!storageV2v4.equalsIgnoreCase("none")) {
-				storageConfig = storageConfig + ";v2v4=" + storageV2v4;
-			}
 			String storageLongConnection = getParm(req, "storage.longConnection");
 			if (!storageLongConnection.equalsIgnoreCase("none")) {
 				storageConfig = storageConfig + ";longConnection=" + storageLongConnection;
