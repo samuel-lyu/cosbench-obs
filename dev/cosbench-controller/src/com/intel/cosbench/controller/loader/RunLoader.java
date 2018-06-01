@@ -12,4 +12,6 @@ public interface RunLoader {
 
 	public List<WorkloadInfo> load() throws IOException;
 
+	public List<String[]> loadWork(String deleteId) throws IOException;
+
 }

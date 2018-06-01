@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 import javax.servlet.http.*;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -63,10 +64,19 @@ public class HistoryWorkloadPageController extends AbstractController {
 		if(!StringUtils.isEmpty(deleteIds))
 		{
 			String[] ids = deleteIds.split("_");
-			for (String deleteId : ids){
-				controller.delete(deleteId);
+			WorkloadInfo[] workloads = controller.getArchivedWorkloads();
+			//1.delete from memory
+			for(String s: ids)
+			{
+				for(WorkloadInfo work: workloads)
+				{
+					if(work.getId().equals(s))
+					{
+						controller.deleteFromRAM(work);
+					}
+				}
 			}
-			
+			controller.delete(deleteIds);
 		}
 		if (!StringUtils.isEmpty(loadArch) && loadArch.equals("true"))
 			controller.setloadArch(true);

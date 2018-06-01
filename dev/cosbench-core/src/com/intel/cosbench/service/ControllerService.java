@@ -65,4 +65,6 @@ public interface ControllerService {
 
 	public void delete(String deleteId);
 
+	public void deleteFromRAM(WorkloadInfo work);
+
 }

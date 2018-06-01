@@ -18,10 +18,17 @@ limitations under the License.
 package com.intel.cosbench.controller.archiver;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import com.intel.cosbench.config.*;
 import com.intel.cosbench.config.castor.CastorConfigTools;
+import com.intel.cosbench.controller.loader.Loaders;
+import com.intel.cosbench.controller.loader.RunLoader;
+import com.intel.cosbench.controller.loader.SimpleWorkloadLoader;
 import com.intel.cosbench.exporter.*;
 import com.intel.cosbench.log.*;
 import com.intel.cosbench.model.*;
@@ -315,22 +322,49 @@ public class SimpleWorkloadArchiver implements WorkloadArchiver {
 
 	@Override
 	public void delete(String deleteId) {
-		 File file = ARCHIVE_DIR;
-		 String[] list = file.list();
-		 for(String ls: list)
-		 {
-			 if(ls.split("-")[0].equals(deleteId))
-			 {
-				 delAllFile(ARCHIVE_DIR+File.separator+ls);
-			 }else if(ls.split("-")[0].equals("run-history.csv"))
-			 {
-				 
-			 }else if(ls.split("-")[0].equals("workloads.csv"))
-			 {
-				 
-			 }
-			 
-		 }
+		String[] list = ARCHIVE_DIR.list();
+		String[] ids = deleteId.split("_");
+		List<WorkloadInfo> workloads = null ;
+		try {
+			workloads = new SimpleWorkloadLoader().loadWorkloadRun();
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
+		File historyfile = new File(ARCHIVE_DIR, "run-history.csv");
+		for (String s : ids) 
+		{
+			for (WorkloadInfo wo : workloads) 
+			{
+				if (wo.getId().equals(s)) 
+				{
+					try {
+						workloads.remove(wo);
+						break;
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		for (String s : ids) 
+		{
+			for (String ls : list) {
+				if (ls.startsWith(s+"-")) {
+					delAllFile(ARCHIVE_DIR + File.separator + ls);
+				}
+			}
+		}
+		if (historyfile.exists()) {
+			historyfile.delete();
+		}
+		resolveWorkloadsFile(deleteId);
+		for (WorkloadInfo wo : workloads) {
+			try {
+				exportWorkloadRun(wo);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private void delAllFile(String file) {
@@ -346,7 +380,43 @@ public class SimpleWorkloadArchiver implements WorkloadArchiver {
 			}
 		}
 		new File(file).delete();
-		
 	}
-
+	private void resolveWorkloadsFile(String deleteId)
+	{
+		try {
+			File file = new File(ARCHIVE_DIR, "workloads.csv");
+			if (!file.exists())
+				return;
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			RunLoader loader = Loaders.newRunExporter(reader);
+			List<String[]> loadWork = loader.loadWork(deleteId);
+			if (reader != null)
+				reader.close();
+			if (file.exists()) {
+				file.delete();
+			}
+			Writer writer = new BufferedWriter(new FileWriter(file, true));
+			MatrixExporter exporter = Exporters.newMatrixExporter(null);
+			try {
+				exporter.init(writer);
+				for (String[] lo : loadWork) {
+					StringBuffer buffer = new StringBuffer();
+					for(String s: lo)
+					{
+						buffer.append(s).append(",");
+					}
+					buffer.setCharAt(buffer.length() - 1, '\n');
+					writer.write(buffer.toString());
+					writer.flush();
+				} 
+			} finally {
+				writer.close();
+			}
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

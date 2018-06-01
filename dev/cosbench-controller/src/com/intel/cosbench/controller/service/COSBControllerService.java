@@ -396,4 +396,15 @@ class COSBControllerService implements ControllerService, WorkloadListener {
 		archiver.delete(deleteId);
 	}
 
+	@Override
+	public void deleteFromRAM(WorkloadInfo work) {
+		for(WorkloadContext workload : memRepo.getArchivedWorkloads()) {
+			if(workload.getId().equals(work.getId()))
+			{
+				memRepo.removeWorkload(workload);
+			}
+		}
+	}
+
+
 }

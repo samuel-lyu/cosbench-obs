@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import com.intel.cosbench.bench.Report;
 import com.intel.cosbench.config.Workload;
 import com.intel.cosbench.controller.model.WorkloadContext;
@@ -92,6 +94,30 @@ class CSVRunLoader extends AbstractRunLoader {
 			workloads.add(workloadContext);
 		}
 		return workloads;
+	}
+
+	@Override
+	public List<String[]> loadWork(String deleteId) throws IOException {
+		String[] ids = deleteId.split("_");
+		String workloadRecordLine = null;
+		List<String[]> ls = new ArrayList<String[]>();
+		while ((workloadRecordLine = this.reader.readLine()) != null) {
+			String[] columns = workloadRecordLine.split(",");
+			boolean isDeleteLine  = false;
+			for(String s: ids)
+			{
+				if(columns[0].startsWith(s+"-"))
+				{
+					isDeleteLine = true;
+					break;
+				}
+			}
+			if(!isDeleteLine)
+			{
+				ls.add(columns);
+			}
+	}
+		return ls;
 	}
 
 }
