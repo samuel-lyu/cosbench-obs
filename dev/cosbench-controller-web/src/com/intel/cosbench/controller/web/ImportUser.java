@@ -38,6 +38,8 @@ import jxl.read.biff.BiffException;
 import jxl.write.Label;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
 
 public class ImportUser extends UserManagementController {
 	
@@ -92,24 +94,26 @@ public class ImportUser extends UserManagementController {
             String courseFile = directory.getCanonicalPath();
 			String userFilePath = courseFile + File.separator + "user" + File.separator + "all-user.xls";
 			File userFile = new File(userFilePath);
+			if (!userFile.exists())
+			{
+				initializeUserExcel(userFile);
+			}
 			InputStream readStream = new FileInputStream(userFile); 
             Workbook workbook = Workbook.getWorkbook(readStream);
             WritableWorkbook wworkbook = Workbook.createWorkbook(userFile, workbook);
             WritableSheet sheetToWrite = wworkbook.getSheet(0);  
+            int maxUserId = Integer.parseInt(sheetToWrite.getCell(7, 0).getContents());
+            int totaluser = Integer.parseInt(sheetToWrite.getCell(9, 0).getContents());
             for (int i = 0; i < importUsers.size(); i++) { 
-                int rows = sheetToWrite.getRows();
             	User user = importUsers.get(i);
-            	int rowToAdd = rows;
-            	String userId = "";
-            	if (rowToAdd > 1)
-				{
-            		userId = sheetToWrite.getCell(0, rowToAdd-1).getContents();
-				}
-            	else 
-            	{
-            		userId = "1";
-				}
-            	userId = rowToAdd + "";
+            	int rowToAdd = totaluser + 1;
+            	String userId = "u" + ++maxUserId + "";
+            	++totaluser;
+            	Label maxId = new Label(7, 0, maxUserId + "");
+            	sheetToWrite.addCell(maxId);
+            	Label totalUsers = new Label(9, 0, totaluser + "");
+            	sheetToWrite.addCell(totalUsers);
+            	
             	Label idToWrite = new Label(0, rowToAdd, userId);
             	sheetToWrite.addCell(idToWrite);
             	Label userNameToWrite = new Label(1, rowToAdd, user.getUserName());
@@ -125,7 +129,7 @@ public class ImportUser extends UserManagementController {
         	wworkbook.close();
         	workbook.close();
         	readStream.close();
-        } 
+        }
         catch (BiffException e) 
         {  
             e.printStackTrace();  
@@ -140,7 +144,43 @@ public class ImportUser extends UserManagementController {
 		}
     }  
 	
-    @SuppressWarnings("unchecked")
+    private void initializeUserExcel(File userFile)
+	{
+    	try
+		{
+    		userFile.createNewFile();
+			WritableWorkbook workbook = Workbook.createWorkbook(userFile);
+			WritableSheet sheetToWrite = workbook.createSheet("UserSheet", 0);
+			Label idHeader = new Label(0, 0, "ID");
+        	sheetToWrite.addCell(idHeader);
+        	Label usernameHeader = new Label(1, 0, "Username");
+        	sheetToWrite.addCell(usernameHeader);
+        	Label passwordHeader = new Label(2, 0, "Password");
+        	sheetToWrite.addCell(passwordHeader);
+        	Label usergroupHeader = new Label(3, 0, "Usergroup");
+        	sheetToWrite.addCell(usergroupHeader);
+        	Label descriptionHeader = new Label(4, 0, "Description");
+        	sheetToWrite.addCell(descriptionHeader);
+        	Label maxIdHeader = new Label(6, 0, "MaxId");
+        	sheetToWrite.addCell(maxIdHeader);
+        	Label maxId = new Label(7, 0, "0");
+        	sheetToWrite.addCell(maxId);
+        	Label totalUsersHeader = new Label(8, 0, "TotalUsers");
+        	sheetToWrite.addCell(totalUsersHeader);
+        	Label totalUsers = new Label(9, 0, "0");
+        	sheetToWrite.addCell(totalUsers);
+        	workbook.write();
+        	workbook.close();
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		} catch (WriteException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
     private InputStream retrieveUserStream(HttpServletRequest request)
             throws Exception {
         FileItemFactory factory = new DiskFileItemFactory();

@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.servlet.http.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.intel.cosbench.controller.entity.User;
@@ -36,6 +37,11 @@ import com.intel.cosbench.web.*;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
+import jxl.write.Label;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
 
 public class UserManagementController extends AbstractController {
 
@@ -53,13 +59,16 @@ public class UserManagementController extends AbstractController {
     
     protected ModelAndView process(HttpServletRequest req) {
     	ModelAndView result = new ModelAndView("userManagement");
+    	String deleteUserIds = req.getParameter("deleteUserIds");
+    	if (deleteUserIds != null && deleteUserIds.length() > 0)
+		{
+			deleteUserFromExcel(deleteUserIds);
+		}
     	List<User> allUsers = new ArrayList<User>();
 		readUserFromExcel(allUsers);
 		Integer page = PageUtil.getPageParam(req);
     	return UserPage.page(result, allUsers, page);
 	}
-
-	
     
     public void readUserFromExcel(List<User> allUsers) {  
         try {  
@@ -98,7 +107,7 @@ public class UserManagementController extends AbstractController {
                 if (!user.getId().equals("")) {
 					allUsers.add(user);
 				}
-            }  
+            }
         } catch (FileNotFoundException e) {  
             e.printStackTrace();  
         } catch (BiffException e) {  
@@ -106,5 +115,54 @@ public class UserManagementController extends AbstractController {
         } catch (IOException e) {  
             e.printStackTrace();  
         }  
+    }  
+    
+    public void deleteUserFromExcel(String uids) {
+    	if (StringUtils.isEmpty(uids))
+		{
+			return;
+		}
+    	String[] userIds = uids.split("_");
+    	try {  
+    		File directory = new File("");
+            String courseFile = directory.getCanonicalPath();
+			String userFilePath = courseFile + File.separator + "user" + File.separator + "all-user.xls";
+			File userFile = new File(userFilePath);
+			InputStream readStream = new FileInputStream(userFile); 
+            Workbook workbook = Workbook.getWorkbook(readStream);
+            WritableWorkbook wworkbook = Workbook.createWorkbook(userFile, workbook);
+            WritableSheet sheetToDelete = wworkbook.getSheet(0);
+            for (int i = 0; i < userIds.length; i++) { 
+            	int totaluser = Integer.parseInt(sheetToDelete.getCell(9, 0).getContents());
+            	for (int j = totaluser; j > 0; j--)
+				{
+            		String userId = sheetToDelete.getCell(0, j).getContents();
+            		if (userIds[i].equals(userId))
+					{
+            			sheetToDelete.removeRow(j);
+            			--totaluser;
+            			Label totalUsers = new Label(9, 0, totaluser + "");
+            			sheetToDelete.addCell(totalUsers);
+            			break;
+					}
+				}
+            }
+            wworkbook.write();
+        	wworkbook.close();
+        	workbook.close();
+        	readStream.close();
+    	} catch (FileNotFoundException e) {  
+    		e.printStackTrace();  
+    	} catch (BiffException e) {  
+    		e.printStackTrace();  
+    	} catch (IOException e) {  
+    		e.printStackTrace();  
+    	} catch (RowsExceededException e)
+		{
+			e.printStackTrace();
+		} catch (WriteException e)
+		{
+			e.printStackTrace();
+		}  
     }  
 }

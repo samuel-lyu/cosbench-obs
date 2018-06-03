@@ -59,6 +59,11 @@
 		document.getElementById('neighid-' + id).value = neighid;
 		document.getElementById('up-' + id).value = value;
 	}
+	function deleteusers() {
+		var uids = findChecked('User');
+		document.getElementById('deleteUserIds').value = uids;
+		document.getElementById('deleteUserForm').submit();
+	}
   </script>
   <title>COSBench Controller</title> 
 </head>
@@ -98,7 +103,12 @@
 			  </div>
 			  <table class="info-table">
 				<tr>
-				  	<td style="width:50%;"></td>
+				  	<td style="width:50%;">
+				  		<form id="deleteUserForm" method="POST" action="userManagement.html?page=${currentPage}"  style="text-align:left">
+							<input id="deleteUserIds" type="hidden" name="deleteUserIds" value="">
+							<input type="button" onclick="deleteusers();" value="deleteusers" style="text-align:left">
+						</form>
+				  	</td>
 				  	<td style="width:50%;">
 				  	<h>TotalPage:&nbsp;</h><span id = "totalPage">${totalPage}</span>
 				  	<h>&nbsp;&nbsp;CurrentPage:&nbsp;</h><span id = "currentPage">${currentPage}</span>
